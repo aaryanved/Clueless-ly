@@ -4,6 +4,7 @@
 export const IpcChannels = {
   // Renderer -> Main (invoke/handle)
   AppGetStatus: 'app:get-status',
+  AppQuit: 'app:quit',
   ConfigGet: 'config:get',
   ConfigValidate: 'config:validate',
 
@@ -34,12 +35,14 @@ export const IpcChannels = {
   PlatformAudioSources: 'platform:audio-sources',
 
   OverlayToggleClickThrough: 'overlay:toggle-click-through',
+  OverlaySetInteractive: 'overlay:set-interactive',
   OverlaySetContentProtection: 'overlay:set-content-protection',
   OverlayHide: 'overlay:hide',
   OverlayShow: 'overlay:show',
 
   // Main -> Renderer (send/on)
   EvtTranscript: 'evt:transcript',
+  EvtAiQuestion: 'evt:ai-question',
   EvtAiToken: 'evt:ai-token',
   EvtAiDone: 'evt:ai-done',
   EvtStatus: 'evt:status',

@@ -56,12 +56,24 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
   }
 }
 
+/**
+ * Start an answer stream. `announce: true` first emits an ai-question event so the UI
+ * can create a message bubble — used for auto-answers where the renderer did not
+ * initiate the request. Manual asks create their bubble from the invoke() return value.
+ */
+export function startAsk(req: AiAskRequest, opts: { announce?: boolean } = {}): string {
+  const requestId = randomUUID()
+  if (opts.announce) {
+    events.aiQuestion({ requestId, question: req.question, source: 'auto' })
+  }
+  void runAsk(requestId, req)
+  return requestId
+}
+
 export function registerAiIpc(): void {
   ipcMain.handle(IpcChannels.AiAsk, async (_e, req: AiAskRequest) => {
-    const requestId = randomUUID()
     // Fire-and-forget: return the id immediately so the UI can create the message
     // bubble, then stream tokens into it via events.
-    void runAsk(requestId, req)
-    return { requestId }
+    return { requestId: startAsk(req) }
   })
 }

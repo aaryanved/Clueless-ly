@@ -19,6 +19,7 @@ import type {
 // only bridge between the sandboxed UI and the privileged main process.
 const api = {
   getStatus: (): Promise<AppStatus> => ipcRenderer.invoke(IpcChannels.AppGetStatus),
+  quit: (): Promise<void> => ipcRenderer.invoke(IpcChannels.AppQuit),
 
   config: {
     get: (): Promise<ConfigStatus> => ipcRenderer.invoke(IpcChannels.ConfigGet),
@@ -73,6 +74,8 @@ const api = {
   overlay: {
     setClickThrough: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.OverlayToggleClickThrough, enabled),
+    setInteractive: (enabled: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.OverlaySetInteractive, enabled),
     setContentProtection: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.OverlaySetContentProtection, enabled),
     hide: (): Promise<void> => ipcRenderer.invoke(IpcChannels.OverlayHide),
@@ -82,6 +85,7 @@ const api = {
   // Event subscriptions (main -> renderer). Each returns an unsubscribe function.
   on: {
     transcript: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtTranscript, cb),
+    aiQuestion: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtAiQuestion, cb),
     aiToken: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtAiToken, cb),
     aiDone: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtAiDone, cb),
     status: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtStatus, cb),

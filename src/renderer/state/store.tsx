@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type {
   AiDoneEvent,
+  AiQuestionEvent,
   AiTokenEvent,
   AppSettings,
   AppStatus,
@@ -132,6 +133,10 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
     const d = dispatchRef.current
     const unsubs = [
       window.clueless.on.transcript((p) => d({ type: 'upsertSegment', segment: (p as TranscriptEvent).segment })),
+      window.clueless.on.aiQuestion((p) => {
+        const e = p as AiQuestionEvent
+        d({ type: 'startMessage', id: e.requestId, question: e.question })
+      }),
       window.clueless.on.aiToken((p) => {
         const e = p as AiTokenEvent
         d({ type: 'appendToken', id: e.requestId, token: e.token })

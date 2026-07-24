@@ -6,6 +6,7 @@ import { setEventTarget } from './events'
 import { configStatus, getConfig } from './config'
 import { registerAiIpc } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
+import { registerAutoAnswer } from './transcription/auto-answer'
 import { registerContextIpc, contextEngine } from './context/context-engine'
 import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { settingsService, registerSettingsIpc } from './settings/settings-service'
@@ -58,8 +59,11 @@ async function bootstrap(): Promise<void> {
   )
   ipcMain.handle(IpcChannels.PlatformAudioSources, async () => platform.screen.listSources())
 
+  ipcMain.handle(IpcChannels.AppQuit, async () => app.quit())
+
   registerAiIpc()
   registerTranscriptionIpc()
+  registerAutoAnswer()
   registerContextIpc()
   registerSessionsIpc()
   registerSettingsIpc()
@@ -72,7 +76,16 @@ async function bootstrap(): Promise<void> {
   setupShortcuts(platform, overlay, initial.shortcuts)
   createTray(overlay)
 
+  // Start as a click-through ghost: mouse events pass through to whatever is behind,
+  // except where the renderer temporarily re-enables interactivity (chat box, gear).
+  overlay.setIgnoreMouseEvents(true, { forward: true })
+
   // Overlay UX controls.
+  ipcMain.handle(IpcChannels.OverlaySetInteractive, async (_e, enabled: boolean) => {
+    // enabled=true  -> window captures the mouse (interactive region hovered)
+    // enabled=false -> window ignores the mouse and forwards move events
+    if (overlay) overlay.setIgnoreMouseEvents(!enabled, { forward: true })
+  })
   ipcMain.handle(IpcChannels.OverlayToggleClickThrough, async (_e, enabled: boolean) => {
     if (overlay) platform.window.setClickThrough(overlay, enabled)
   })

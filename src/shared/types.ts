@@ -124,6 +124,12 @@ export interface AppStatus {
 export interface TranscriptEvent {
   segment: TranscriptSegment
 }
+export interface AiQuestionEvent {
+  requestId: string
+  question: string
+  // 'auto' when triggered by a question detected in the transcript.
+  source: 'auto' | 'manual'
+}
 export interface AiTokenEvent {
   requestId: string
   token: string

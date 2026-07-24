@@ -11,14 +11,18 @@ const log = createLogger('overlay-window')
  */
 export function createOverlayWindow(platform: PlatformAdapter): BrowserWindow {
   const primary = screen.getPrimaryDisplay()
-  const width = 460
-  const height = 640
+  const wa = primary.workArea
+  // Large, centered overlay (roughly two-thirds of the work area).
+  const width = Math.min(1180, Math.round(wa.width * 0.74))
+  const height = Math.min(760, Math.round(wa.height * 0.74))
 
   const win = new BrowserWindow({
     width,
     height,
-    x: primary.workArea.x + primary.workArea.width - width - 24,
-    y: primary.workArea.y + 48,
+    minWidth: 720,
+    minHeight: 460,
+    x: wa.x + Math.round((wa.width - width) / 2),
+    y: wa.y + Math.round((wa.height - height) / 2),
     frame: false,
     transparent: true,
     resizable: true,

@@ -60,7 +60,12 @@ export class TranscriptionOrchestrator {
     if (!session) {
       session = new RealtimeTranscriptionSession(role, {
         onSegment: (seg) => this.handleSegment(seg),
-        onError: (message) => events.error({ scope: 'transcription', message })
+        onError: (message) => events.error({ scope: 'transcription', message }),
+        onClose: () => {
+          // Drop the closed session so the next audio chunk re-opens a fresh one
+          // while we are still listening (handles transient disconnects).
+          if (this.sessions.get(role) === session) this.sessions.delete(role)
+        }
       })
       this.sessions.set(role, session)
       void session.connect()
