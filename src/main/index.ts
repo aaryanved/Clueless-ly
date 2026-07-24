@@ -5,6 +5,7 @@ import { createOverlayWindow } from './overlay-window'
 import { setEventTarget } from './events'
 import { configStatus, getConfig } from './config'
 import { registerAiIpc } from './ai/ask-service'
+import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -24,7 +25,7 @@ async function bootstrap(): Promise<void> {
     ready: true,
     config: configStatus(),
     platform: platform.system.describe(),
-    transcribing: false
+    transcribing: orchestrator.isActive()
   }))
 
   ipcMain.handle(IpcChannels.ConfigGet, async () => configStatus())
@@ -42,6 +43,7 @@ async function bootstrap(): Promise<void> {
   )
 
   registerAiIpc()
+  registerTranscriptionIpc()
 
   overlay = createOverlayWindow(platform)
   setEventTarget(overlay)
