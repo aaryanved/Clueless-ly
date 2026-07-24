@@ -14,6 +14,7 @@ import type {
   AppStatus,
   ErrorEvent,
   SessionSummary,
+  ShortcutEvent,
   StatusEvent,
   TranscriptEvent,
   TranscriptSegment
@@ -147,6 +148,10 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       window.clueless.on.error((p) => {
         const e = p as ErrorEvent
         d({ type: 'banner', banner: { kind: 'error', text: `${e.scope}: ${e.message}` } })
+      }),
+      window.clueless.on.shortcut((p) => {
+        const e = p as ShortcutEvent
+        if (e.action === 'askQuestion') d({ type: 'setTab', tab: 'assistant' })
       })
     ]
 

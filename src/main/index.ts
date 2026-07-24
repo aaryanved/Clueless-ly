@@ -6,8 +6,11 @@ import { setEventTarget } from './events'
 import { configStatus, getConfig } from './config'
 import { registerAiIpc } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
-import { registerContextIpc } from './context/context-engine'
+import { registerContextIpc, contextEngine } from './context/context-engine'
 import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
+import { settingsService, registerSettingsIpc } from './settings/settings-service'
+import { defaultSettings } from './settings/defaults'
+import { setupShortcuts } from './shortcuts'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -23,6 +26,10 @@ async function bootstrap(): Promise<void> {
   const platform = await resolvePlatform()
   getConfig() // triggers .env load + logs config health once at startup
   await sessionManager.init()
+  await settingsService.init(defaultSettings(platform))
+
+  const initial = settingsService.get()
+  contextEngine.setMaxTokens(initial.maxContextTokens)
 
   ipcMain.handle(IpcChannels.AppGetStatus, async (): Promise<AppStatus> => ({
     ready: true,
@@ -45,14 +52,40 @@ async function bootstrap(): Promise<void> {
   ipcMain.handle(IpcChannels.PlatformOpenPermissionSettings, async (_e, kind) =>
     platform.permissions.openSettings(kind)
   )
+  ipcMain.handle(IpcChannels.PlatformAudioSources, async () => platform.screen.listSources())
 
   registerAiIpc()
   registerTranscriptionIpc()
   registerContextIpc()
   registerSessionsIpc()
+  registerSettingsIpc()
 
   overlay = createOverlayWindow(platform)
   setEventTarget(overlay)
+  platform.window.setContentProtection(overlay, initial.contentProtectionEnabled)
+  setupShortcuts(platform, overlay, initial.shortcuts)
+
+  // Overlay UX controls.
+  ipcMain.handle(IpcChannels.OverlayToggleClickThrough, async (_e, enabled: boolean) => {
+    if (overlay) platform.window.setClickThrough(overlay, enabled)
+  })
+  ipcMain.handle(IpcChannels.OverlaySetContentProtection, async (_e, enabled: boolean) => {
+    if (overlay) platform.window.setContentProtection(overlay, enabled)
+  })
+  ipcMain.handle(IpcChannels.OverlayHide, async () => overlay?.hide())
+  ipcMain.handle(IpcChannels.OverlayShow, async () => {
+    overlay?.show()
+    overlay?.focus()
+  })
+
+  // Apply settings side effects on change.
+  settingsService.onChange((next, patch) => {
+    if (patch.contentProtectionEnabled !== undefined && overlay) {
+      platform.window.setContentProtection(overlay, next.contentProtectionEnabled)
+    }
+    if (patch.maxContextTokens !== undefined) contextEngine.setMaxTokens(next.maxContextTokens)
+    if (patch.shortcuts && overlay) setupShortcuts(platform, overlay, next.shortcuts)
+  })
 
   const status = configStatus()
   if (status.problems.length) {
@@ -69,6 +102,8 @@ async function bootstrap(): Promise<void> {
     if (BrowserWindow.getAllWindows().length === 0) {
       overlay = createOverlayWindow(platform)
       setEventTarget(overlay)
+      platform.window.setContentProtection(overlay, settingsService.get().contentProtectionEnabled)
+      setupShortcuts(platform, overlay, settingsService.get().shortcuts)
     }
   })
 }
