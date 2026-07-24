@@ -1,9 +1,23 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 out/
 release/
+*.tsbuildinfo
+
+# Environment / secrets — never commit these
 .env
 .env.local
 .env.*.local
+*.pem
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS / editor cruft
 .DS_Store
+Thumbs.db
+.idea/
