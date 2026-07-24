@@ -6,6 +6,7 @@ import { setEventTarget } from './events'
 import { configStatus, getConfig } from './config'
 import { registerAiIpc } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
+import { registerContextIpc } from './context/context-engine'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -44,6 +45,7 @@ async function bootstrap(): Promise<void> {
 
   registerAiIpc()
   registerTranscriptionIpc()
+  registerContextIpc()
 
   overlay = createOverlayWindow(platform)
   setEventTarget(overlay)
