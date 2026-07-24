@@ -6,6 +6,7 @@
 import { createLogger } from '../logging'
 import type { PlatformAdapter } from './contracts'
 import { createBaseAdapter } from './base'
+import { createAdapter as createDarwinAdapter } from './darwin'
 
 const log = createLogger('platform')
 
@@ -13,8 +14,9 @@ let cached: PlatformAdapter | null = null
 
 export async function resolvePlatform(): Promise<PlatformAdapter> {
   if (cached) return cached
-  // dev baseline: cross-platform behaviour only.
-  cached = createBaseAdapter()
+  // mac branch: use the native macOS adapter on darwin, fall back to base elsewhere
+  // (e.g. running the shared core on a non-mac dev machine).
+  cached = process.platform === 'darwin' ? createDarwinAdapter() : createBaseAdapter()
   await cached.init()
   log.info('resolved platform adapter', { id: cached.id, platform: process.platform })
   return cached

@@ -1,12 +1,34 @@
 import { useStore } from '../state/store'
+import { captureManager } from '../audio/capture'
 
 export function TranscriptPanel(): JSX.Element {
   const { state, dispatch } = useStore()
+  const settings = state.settings
+
+  async function start(): Promise<void> {
+    await window.clueless.transcription.start()
+    if (settings?.microphoneEnabled !== false) {
+      try {
+        await captureManager.startMicrophone()
+      } catch (err) {
+        dispatch({
+          type: 'banner',
+          banner: { kind: 'error', text: `Microphone unavailable: ${String(err)}. Grant access in System Settings.` }
+        })
+        void window.clueless.platform.openPermissionSettings('microphone')
+      }
+    }
+  }
+
+  async function stop(): Promise<void> {
+    captureManager.stopAll()
+    await window.clueless.transcription.stop()
+  }
 
   async function toggle(): Promise<void> {
     try {
-      if (state.transcribing) await window.clueless.transcription.stop()
-      else await window.clueless.transcription.start()
+      if (state.transcribing) await stop()
+      else await start()
     } catch (err) {
       dispatch({ type: 'banner', banner: { kind: 'error', text: `Transcription: ${String(err)}` } })
     }
