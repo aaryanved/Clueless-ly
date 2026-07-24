@@ -1,0 +1,49 @@
+appId: com.clueless.ly
+productName: Clueless-ly
+copyright: Copyright © 2026
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+extraMetadata:
+  main: out/main/index.js
+
+# ---- macOS ----
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    # Usage strings shown in the macOS permission prompts.
+    NSMicrophoneUsageDescription: Clueless-ly transcribes your microphone to provide real-time assistance.
+    NSScreenCaptureUsageDescription: Clueless-ly reads your screen and system audio to answer questions in context.
+    # Run as a menu-bar accessory (no Dock icon).
+    LSUIElement: 1
+
+# afterSign runs notarization when Apple credentials are present (see build/notarize.cjs).
+afterSign: build/notarize.cjs
+
+dmg:
+  sign: false
+
+# ---- Windows (implemented on the `windows` branch) ----
+win:
+  target:
+    - nsis
+  # signtool configuration (certificateFile / certificateSubjectName) is supplied via
+  # CI environment on the windows branch; unsigned local builds are produced otherwise.
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true

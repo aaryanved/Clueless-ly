@@ -13,6 +13,7 @@ import { defaultSettings } from './settings/defaults'
 import { setupShortcuts } from './shortcuts'
 import { setupDisplayMediaHandler } from './capture-grant'
 import { createTray } from './tray'
+import { applyWebContentsHardening, requestSingleInstance } from './hardening'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -25,6 +26,7 @@ export function getOverlayWindow(): BrowserWindow | null {
 }
 
 async function bootstrap(): Promise<void> {
+  applyWebContentsHardening()
   const platform = await resolvePlatform()
   getConfig() // triggers .env load + logs config health once at startup
   await sessionManager.init()
@@ -113,10 +115,19 @@ async function bootstrap(): Promise<void> {
   })
 }
 
-app.whenReady().then(bootstrap).catch((err) => {
-  log.error('bootstrap failed', err)
-  app.quit()
-})
+if (requestSingleInstance()) {
+  app.on('second-instance', () => {
+    if (overlay) {
+      overlay.show()
+      overlay.focus()
+    }
+  })
+
+  app.whenReady().then(bootstrap).catch((err) => {
+    log.error('bootstrap failed', err)
+    app.quit()
+  })
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
