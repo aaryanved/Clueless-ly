@@ -11,6 +11,8 @@ import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { settingsService, registerSettingsIpc } from './settings/settings-service'
 import { defaultSettings } from './settings/defaults'
 import { setupShortcuts } from './shortcuts'
+import { setupDisplayMediaHandler } from './capture-grant'
+import { createTray } from './tray'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -60,10 +62,13 @@ async function bootstrap(): Promise<void> {
   registerSessionsIpc()
   registerSettingsIpc()
 
+  setupDisplayMediaHandler(platform)
+
   overlay = createOverlayWindow(platform)
   setEventTarget(overlay)
   platform.window.setContentProtection(overlay, initial.contentProtectionEnabled)
   setupShortcuts(platform, overlay, initial.shortcuts)
+  createTray(overlay)
 
   // Overlay UX controls.
   ipcMain.handle(IpcChannels.OverlayToggleClickThrough, async (_e, enabled: boolean) => {

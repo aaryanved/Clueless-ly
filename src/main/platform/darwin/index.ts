@@ -1,3 +1,4 @@
+import { app } from 'electron'
 import { createLogger } from '../../logging'
 import type { PlatformAdapter } from '../contracts'
 import type { Platform } from '@shared/types'
@@ -27,6 +28,14 @@ export class DarwinPlatformAdapter implements PlatformAdapter {
   readonly system = new DarwinSystemInfo()
 
   async init(): Promise<void> {
+    // Run as an accessory app: no Dock icon and not in Cmd+Tab, so the assistant stays
+    // discreet. The tray/menu-bar item remains the way to show/hide and quit.
+    try {
+      app.setActivationPolicy('accessory')
+      app.dock?.hide()
+    } catch (err) {
+      log.warn('failed to set accessory activation policy', { err })
+    }
     log.info('macOS platform adapter initialised', {
       secureBackend: this.secureStorage.backend(),
       version: process.getSystemVersion?.()

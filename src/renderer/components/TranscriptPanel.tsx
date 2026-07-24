@@ -18,6 +18,20 @@ export function TranscriptPanel(): JSX.Element {
         void window.clueless.platform.openPermissionSettings('microphone')
       }
     }
+    if (settings?.systemAudioEnabled && state.status?.platform.systemAudio.supported) {
+      try {
+        await captureManager.startSystemAudio()
+      } catch (err) {
+        dispatch({
+          type: 'banner',
+          banner: {
+            kind: 'error',
+            text: `System audio unavailable: ${String(err)}. Grant Screen Recording permission.`
+          }
+        })
+        void window.clueless.platform.openPermissionSettings('screen')
+      }
+    }
   }
 
   async function stop(): Promise<void> {
