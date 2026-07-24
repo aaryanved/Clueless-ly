@@ -26,6 +26,7 @@ import type {
 } from '../contracts'
 import type { Platform, PermissionKind, PermissionStatus, PlatformDescription } from '@shared/types'
 import { BaseSecureStorage } from './secure-storage'
+export { BaseSecureStorage } from './secure-storage'
 
 const log = createLogger('platform:base')
 

@@ -6,6 +6,7 @@
 import { createLogger } from '../logging'
 import type { PlatformAdapter } from './contracts'
 import { createBaseAdapter } from './base'
+import { createAdapter as createWin32Adapter } from './win32'
 
 const log = createLogger('platform')
 
@@ -13,8 +14,9 @@ let cached: PlatformAdapter | null = null
 
 export async function resolvePlatform(): Promise<PlatformAdapter> {
   if (cached) return cached
-  // dev baseline: cross-platform behaviour only.
-  cached = createBaseAdapter()
+  // windows branch: use the native Windows adapter on win32, fall back to base
+  // elsewhere (e.g. building/type-checking the Windows branch on a non-Windows machine).
+  cached = process.platform === 'win32' ? createWin32Adapter() : createBaseAdapter()
   await cached.init()
   log.info('resolved platform adapter', { id: cached.id, platform: process.platform })
   return cached
