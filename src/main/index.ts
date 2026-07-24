@@ -2,6 +2,9 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { createLogger } from './logging'
 import { resolvePlatform } from './platform'
 import { createOverlayWindow } from './overlay-window'
+import { setEventTarget } from './events'
+import { configStatus, getConfig } from './config'
+import { registerAiIpc } from './ai/ask-service'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -15,23 +18,17 @@ export function getOverlayWindow(): BrowserWindow | null {
 
 async function bootstrap(): Promise<void> {
   const platform = await resolvePlatform()
+  getConfig() // triggers .env load + logs config health once at startup
 
-  // Minimal status IPC — expanded in later batches (config, sessions, transcription).
-  ipcMain.handle(IpcChannels.AppGetStatus, async (): Promise<AppStatus> => {
-    return {
-      ready: true,
-      config: {
-        openaiKeyPresent: false,
-        openaiKeyLooksValid: false,
-        model: 'unconfigured',
-        transcriptionModel: 'unconfigured',
-        realtimeModel: 'unconfigured',
-        problems: ['Configuration is wired up in a later batch.']
-      },
-      platform: platform.system.describe(),
-      transcribing: false
-    }
-  })
+  ipcMain.handle(IpcChannels.AppGetStatus, async (): Promise<AppStatus> => ({
+    ready: true,
+    config: configStatus(),
+    platform: platform.system.describe(),
+    transcribing: false
+  }))
+
+  ipcMain.handle(IpcChannels.ConfigGet, async () => configStatus())
+  ipcMain.handle(IpcChannels.ConfigValidate, async () => configStatus())
 
   ipcMain.handle(IpcChannels.PlatformInfo, async () => platform.system.describe())
   ipcMain.handle(IpcChannels.PlatformPermissionCheck, async (_e, kind) =>
@@ -44,10 +41,27 @@ async function bootstrap(): Promise<void> {
     platform.permissions.openSettings(kind)
   )
 
+  registerAiIpc()
+
   overlay = createOverlayWindow(platform)
+  setEventTarget(overlay)
+
+  const status = configStatus()
+  if (status.problems.length) {
+    // Surface config problems to the UI as a friendly banner (never the key itself).
+    overlay.webContents.once('did-finish-load', () => {
+      overlay?.webContents.send(IpcChannels.EvtError, {
+        scope: 'config',
+        message: status.problems.join(' ')
+      })
+    })
+  }
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) overlay = createOverlayWindow(platform)
+    if (BrowserWindow.getAllWindows().length === 0) {
+      overlay = createOverlayWindow(platform)
+      setEventTarget(overlay)
+    }
   })
 }
 
