@@ -30,6 +30,10 @@ interface Channel {
  */
 export class CaptureManager {
   private channels = new Map<CaptureRole, Channel>()
+  // True while the user wants system audio, so we can re-acquire the stream after a
+  // default-device switch / headphone / Bluetooth / USB change on Windows and macOS.
+  private wantSystemAudio = false
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   isCapturing(role: CaptureRole): boolean {
     return this.channels.has(role)
@@ -45,6 +49,7 @@ export class CaptureManager {
   }
 
   async startSystemAudio(): Promise<void> {
+    this.wantSystemAudio = true
     if (this.channels.has('them')) return
     // The main process grants system (loopback) audio via setDisplayMediaRequestHandler.
     const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -53,10 +58,34 @@ export class CaptureManager {
     })
     // We only want the audio; stop the video track immediately to avoid overhead.
     for (const track of stream.getVideoTracks()) track.stop()
-    if (stream.getAudioTracks().length === 0) {
-      throw new Error('No system audio track was provided by the OS.')
-    }
+    const audio = stream.getAudioTracks()[0]
+    if (!audio) throw new Error('No system audio track was provided by the OS.')
+
+    // If the audio device disappears (device switch, disconnect), re-acquire.
+    audio.addEventListener('ended', () => this.scheduleSystemReconnect())
     this.wire('them', stream)
+    this.ensureDeviceWatch()
+  }
+
+  private ensureDeviceWatch(): void {
+    // A default-output-device change (headphones / Bluetooth / USB) can silence the
+    // loopback stream without ending the track; re-acquire on any device change.
+    navigator.mediaDevices.ondevicechange = () => {
+      if (this.wantSystemAudio) this.scheduleSystemReconnect()
+    }
+  }
+
+  private scheduleSystemReconnect(): void {
+    if (!this.wantSystemAudio || this.reconnectTimer) return
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null
+      // Tear down the stale channel, then re-acquire on the new default device.
+      this.stop('them')
+      this.startSystemAudio().catch(() => {
+        // Retry once more shortly if the device is still settling.
+        if (this.wantSystemAudio) this.scheduleSystemReconnect()
+      })
+    }, 600)
   }
 
   private wire(role: CaptureRole, stream: MediaStream): void {
@@ -92,6 +121,12 @@ export class CaptureManager {
   }
 
   stopAll(): void {
+    this.wantSystemAudio = false
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    navigator.mediaDevices.ondevicechange = null
     for (const role of [...this.channels.keys()]) this.stop(role)
   }
 }

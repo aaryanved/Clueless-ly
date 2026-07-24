@@ -18,10 +18,9 @@ export class Win32SystemInfo implements SystemInfoAdapter {
         notes: 'WDA_EXCLUDEFROMCAPTURE via setContentProtection (Windows 10 2004+).'
       },
       systemAudio: {
-        // Enabled in the WASAPI batch; reported as unsupported until then.
-        supported: false,
-        method: 'none',
-        notes: 'WASAPI loopback system audio is enabled in a later batch.'
+        supported: true,
+        method: 'wasapi-loopback',
+        notes: 'WASAPI loopback captures the current default render device (Windows 10+).'
       }
     }
   }
