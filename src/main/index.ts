@@ -7,6 +7,7 @@ import { configStatus, getConfig } from './config'
 import { registerAiIpc } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
 import { registerContextIpc } from './context/context-engine'
+import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { IpcChannels } from '@shared/ipc'
 import type { AppStatus } from '@shared/types'
 
@@ -21,11 +22,13 @@ export function getOverlayWindow(): BrowserWindow | null {
 async function bootstrap(): Promise<void> {
   const platform = await resolvePlatform()
   getConfig() // triggers .env load + logs config health once at startup
+  await sessionManager.init()
 
   ipcMain.handle(IpcChannels.AppGetStatus, async (): Promise<AppStatus> => ({
     ready: true,
     config: configStatus(),
     platform: platform.system.describe(),
+    activeSessionId: sessionManager.activeId(),
     transcribing: orchestrator.isActive()
   }))
 
@@ -46,6 +49,7 @@ async function bootstrap(): Promise<void> {
   registerAiIpc()
   registerTranscriptionIpc()
   registerContextIpc()
+  registerSessionsIpc()
 
   overlay = createOverlayWindow(platform)
   setEventTarget(overlay)
