@@ -1,67 +1,33 @@
+import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
-import { captureManager } from '../audio/capture'
 
+/** Live transcript column. Segments stream in from the transcription orchestrator. */
 export function TranscriptPanel(): JSX.Element {
   const { state, dispatch } = useStore()
-  const settings = state.settings
+  const endRef = useRef<HTMLDivElement>(null)
 
-  async function start(): Promise<void> {
-    await window.clueless.transcription.start()
-    if (settings?.microphoneEnabled !== false) {
-      try {
-        await captureManager.startMicrophone()
-      } catch (err) {
-        dispatch({
-          type: 'banner',
-          banner: { kind: 'error', text: `Microphone unavailable: ${String(err)}. Grant access in System Settings.` }
-        })
-        void window.clueless.platform.openPermissionSettings('microphone')
-      }
-    }
-    if (settings?.systemAudioEnabled && state.status?.platform.systemAudio.supported) {
-      try {
-        await captureManager.startSystemAudio()
-      } catch (err) {
-        dispatch({
-          type: 'banner',
-          banner: {
-            kind: 'error',
-            text: `System audio unavailable: ${String(err)}. Grant Screen Recording permission.`
-          }
-        })
-        void window.clueless.platform.openPermissionSettings('screen')
-      }
-    }
-  }
-
-  async function stop(): Promise<void> {
-    captureManager.stopAll()
-    await window.clueless.transcription.stop()
-  }
-
-  async function toggle(): Promise<void> {
-    try {
-      if (state.transcribing) await stop()
-      else await start()
-    } catch (err) {
-      dispatch({ type: 'banner', banner: { kind: 'error', text: `Transcription: ${String(err)}` } })
-    }
-  }
+  // Keep the newest segment in view.
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [state.transcript.length])
 
   return (
-    <div className="panel">
-      <div className="panel__actions">
-        <button className={state.transcribing ? 'btn btn--live' : 'btn'} onClick={() => void toggle()}>
-          {state.transcribing ? '● Listening — Stop' : 'Start listening'}
-        </button>
-        <button className="btn btn--ghost" onClick={() => dispatch({ type: 'clearTranscript' })}>
+    <div className="transcript-col">
+      <div className="transcript-col__head">
+        <span className="transcript-col__title">
+          Live transcript
+          {state.transcribing && <span className="live-dot" title="Listening" />}
+        </span>
+        <button className="link-btn" onClick={() => dispatch({ type: 'clearTranscript' })}>
           Clear
         </button>
       </div>
       <div className="transcript">
         {state.transcript.length === 0 && (
-          <p className="muted">
-            No transcript yet. Start listening to capture microphone and system audio.
+          <p className="muted small">
+            {state.transcribing
+              ? 'Listening… speech will appear here.'
+              : 'Press Listen to capture microphone + system audio.'}
           </p>
         )}
         {state.transcript.map((s) => (
@@ -70,6 +36,7 @@ export function TranscriptPanel(): JSX.Element {
             <span className="seg__text">{s.text}</span>
           </div>
         ))}
+        <div ref={endRef} />
       </div>
     </div>
   )

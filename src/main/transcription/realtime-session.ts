@@ -15,17 +15,21 @@ export interface RealtimeSegment {
 interface SessionCallbacks {
   onSegment: (seg: RealtimeSegment) => void
   onError: (message: string) => void
+  onClose?: () => void
 }
 
 /**
- * A single OpenAI Realtime transcription connection, dedicated to one speaker role
- * (mic = 'me', system audio = 'them'). Audio is expected as PCM16 mono @ 24kHz, the
- * format the Realtime API consumes; the renderer resamples before pushing.
+ * A single OpenAI Realtime *transcription* connection, dedicated to one speaker role
+ * (mic = 'me', system audio = 'them'). Uses the GA Realtime API transcription intent
+ * (`?intent=transcription`) — the older Beta shape (with the `OpenAI-Beta: realtime=v1`
+ * header) was retired by the server and closed the socket with code 4000. In the GA
+ * shape all audio config is nested under `session.audio.input`. Audio is PCM16 mono
+ * @ 24 kHz.
  */
 export class RealtimeTranscriptionSession {
   private ws: WebSocket | null = null
   private ready = false
-  private pending: string[] = [] // base64 audio queued until the socket is open
+  private pending: string[] = [] // base64 audio queued until the socket is configured
   private closedByUs = false
 
   constructor(
@@ -35,30 +39,37 @@ export class RealtimeTranscriptionSession {
 
   async connect(): Promise<void> {
     const apiKey = assertApiKey()
-    const model = getConfig().realtimeModel
-    const url = `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}`
+    // GA Realtime API: no OpenAI-Beta header; transcription intent, no model in the URL.
+    const url = 'wss://api.openai.com/v1/realtime?intent=transcription'
 
     this.ws = new WebSocket(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'OpenAI-Beta': 'realtime=v1'
-      }
+      headers: { Authorization: `Bearer ${apiKey}` }
     })
 
     this.ws.on('open', () => {
-      this.ready = true
-      // Configure the session for transcription only.
+      // Configure the transcription session before sending any audio (GA shape).
       this.sendJson({
         type: 'session.update',
         session: {
-          input_audio_format: 'pcm16',
-          input_audio_transcription: { model: getConfig().transcribeModel },
-          turn_detection: { type: 'server_vad', silence_duration_ms: 500 }
+          type: 'transcription',
+          audio: {
+            input: {
+              format: { type: 'audio/pcm', rate: 24000 },
+              transcription: { model: getConfig().transcribeModel },
+              turn_detection: {
+                type: 'server_vad',
+                threshold: 0.5,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 500
+              }
+            }
+          }
         }
       })
+      this.ready = true
       for (const chunk of this.pending) this.appendBase64(chunk)
       this.pending = []
-      log.info('realtime session open', { role: this.role })
+      log.info('realtime transcription session open', { role: this.role })
     })
 
     this.ws.on('message', (data) => this.handleMessage(data.toString()))
@@ -66,9 +77,12 @@ export class RealtimeTranscriptionSession {
       log.warn('realtime socket error', { role: this.role, err })
       this.cb.onError(err instanceof Error ? err.message : String(err))
     })
-    this.ws.on('close', (code) => {
+    this.ws.on('close', (code, reason) => {
       this.ready = false
-      if (!this.closedByUs) log.warn('realtime socket closed', { role: this.role, code })
+      if (!this.closedByUs) {
+        log.warn('realtime socket closed', { role: this.role, code, reason: reason?.toString() })
+        this.cb.onClose?.()
+      }
     })
   }
 
@@ -80,7 +94,7 @@ export class RealtimeTranscriptionSession {
       return
     }
     const type = String(msg['type'] ?? '')
-    // Defensive: the Realtime API has iterated on event names for transcription.
+    // Defensive across API iterations of the transcription event names.
     if (type.endsWith('input_audio_transcription.delta')) {
       const itemId = String(msg['item_id'] ?? 'live')
       const delta = String(msg['delta'] ?? '')
@@ -88,7 +102,7 @@ export class RealtimeTranscriptionSession {
     } else if (type.endsWith('input_audio_transcription.completed')) {
       const itemId = String(msg['item_id'] ?? 'live')
       const transcript = String(msg['transcript'] ?? '')
-      this.cb.onSegment({ itemId, role: this.role, text: transcript, isFinal: true })
+      if (transcript) this.cb.onSegment({ itemId, role: this.role, text: transcript, isFinal: true })
     } else if (type === 'error') {
       const errObj = msg['error'] as { message?: string } | undefined
       this.cb.onError(errObj?.message ?? 'Realtime API error')
@@ -96,14 +110,14 @@ export class RealtimeTranscriptionSession {
   }
 
   private sendJson(obj: unknown): void {
-    if (this.ws && this.ready) this.ws.send(JSON.stringify(obj))
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(obj))
   }
 
   private appendBase64(b64: string): void {
     this.sendJson({ type: 'input_audio_buffer.append', audio: b64 })
   }
 
-  /** Push a chunk of PCM16 audio. Queued if the socket is not open yet. */
+  /** Push a chunk of PCM16 audio. Queued if the socket is not configured yet. */
   pushAudio(pcm: Buffer): void {
     const b64 = pcm.toString('base64')
     if (this.ready) this.appendBase64(b64)

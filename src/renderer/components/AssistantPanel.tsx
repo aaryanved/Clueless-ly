@@ -1,11 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store'
+import { interactiveProps } from '../interactivity'
 
 export function AssistantPanel(): JSX.Element {
   const { state, dispatch } = useStore()
   const [question, setQuestion] = useState('')
-  const [useScreen, setUseScreen] = useState(true)
-  const [useTranscript, setUseTranscript] = useState(true)
+  const endRef = useRef<HTMLDivElement>(null)
+
+  // Keep the latest answer in view as tokens stream in.
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [state.messages])
 
   async function ask(): Promise<void> {
     const q = question.trim()
@@ -14,8 +19,9 @@ export function AssistantPanel(): JSX.Element {
     try {
       const { requestId } = await window.clueless.ai.ask({
         question: q,
-        useScreenContext: useScreen,
-        useTranscriptContext: useTranscript,
+        // Screen + transcript context are always used; the toggles were removed.
+        useScreenContext: true,
+        useTranscriptContext: true,
         sessionId: state.status?.activeSessionId
       })
       dispatch({ type: 'startMessage', id: requestId, question: q })
@@ -29,7 +35,8 @@ export function AssistantPanel(): JSX.Element {
       <div className="messages">
         {state.messages.length === 0 && (
           <p className="muted">
-            Ask a question about what's on your screen or being said. Answers stream in here.
+            Listening is on. Ask anything about what's on your screen or being said — and
+            questions heard in the conversation are answered automatically.
           </p>
         )}
         {state.messages.map((m) => (
@@ -41,32 +48,22 @@ export function AssistantPanel(): JSX.Element {
             </div>
           </div>
         ))}
+        <div ref={endRef} />
       </div>
 
-      <div className="ask">
-        <div className="ask__toggles">
-          <label>
-            <input type="checkbox" checked={useScreen} onChange={(e) => setUseScreen(e.target.checked)} />
-            Screen
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={useTranscript}
-              onChange={(e) => setUseTranscript(e.target.checked)}
-            />
-            Transcript
-          </label>
-        </div>
+      <div className="ask" {...interactiveProps()}>
         <div className="ask__row">
           <textarea
             className="ask__input"
-            placeholder="Ask anything…"
+            placeholder="Ask anything…  (Enter to send, Shift+Enter for a new line)"
             value={question}
-            rows={2}
+            rows={1}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void ask()
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                void ask()
+              }
             }}
           />
           <button className="ask__btn" onClick={() => void ask()}>

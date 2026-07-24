@@ -2,6 +2,7 @@ import type { BrowserWindow } from 'electron'
 import { IpcChannels } from '@shared/ipc'
 import type {
   AiDoneEvent,
+  AiQuestionEvent,
   AiTokenEvent,
   ErrorEvent,
   ShortcutEvent,
@@ -24,6 +25,7 @@ function send(channel: string, payload: unknown): void {
 
 export const events = {
   transcript: (e: TranscriptEvent) => send(IpcChannels.EvtTranscript, e),
+  aiQuestion: (e: AiQuestionEvent) => send(IpcChannels.EvtAiQuestion, e),
   aiToken: (e: AiTokenEvent) => send(IpcChannels.EvtAiToken, e),
   aiDone: (e: AiDoneEvent) => send(IpcChannels.EvtAiDone, e),
   status: (e: StatusEvent) => send(IpcChannels.EvtStatus, e),
