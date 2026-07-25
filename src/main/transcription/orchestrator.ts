@@ -18,6 +18,10 @@ export class TranscriptionOrchestrator {
   private active = false
   private segments: TranscriptSegment[] = []
   private onSegmentHooks: Array<(seg: TranscriptSegment) => void> = []
+  // Accumulated partial text per item (the API sends incremental deltas).
+  private partials = new Map<string, string>()
+  // Recent system-audio ('them') text, used to drop microphone echo of the speakers.
+  private recentThem: Array<{ norm: string; at: number }> = []
 
   isActive(): boolean {
     return this.active
@@ -31,6 +35,8 @@ export class TranscriptionOrchestrator {
   /** Drop the in-memory transcript buffer (used when starting a new conversation). */
   clearTranscript(): void {
     this.segments = []
+    this.partials.clear()
+    this.recentThem = []
   }
 
   onSegment(hook: (seg: TranscriptSegment) => void): void {
@@ -78,16 +84,61 @@ export class TranscriptionOrchestrator {
     return session
   }
 
+  private normalize(t: string): string {
+    // Keep latin + Devanagari (Hindi) word characters for comparison.
+    return t
+      .toLowerCase()
+      .replace(/[^a-z0-9ऀ-ॿ ]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  private similar(a: string, b: string): boolean {
+    if (!a || !b) return false
+    if (a === b) return true
+    if (a.length >= 6 && b.includes(a)) return true
+    if (b.length >= 6 && a.includes(b)) return true
+    const ta = new Set(a.split(' '))
+    const tb = new Set(b.split(' '))
+    let inter = 0
+    for (const t of ta) if (tb.has(t)) inter++
+    const overlap = inter / Math.max(ta.size, tb.size)
+    return overlap >= 0.75 && Math.min(ta.size, tb.size) >= 3
+  }
+
+  /** Is this microphone text an echo of system audio we recently heard? */
+  private isEchoOfThem(text: string): boolean {
+    const now = Date.now()
+    this.recentThem = this.recentThem.filter((r) => now - r.at < 8000)
+    const norm = this.normalize(text)
+    if (norm.length < 6) return false
+    return this.recentThem.some((r) => this.similar(norm, r.norm))
+  }
+
   private handleSegment(seg: RealtimeSegment): void {
     const id = `${seg.role}:${seg.itemId}`
-    const segment: TranscriptSegment = {
-      id,
-      role: seg.role,
-      text: seg.text,
-      isFinal: seg.isFinal,
-      at: Date.now()
+    // Accumulate incremental deltas so partials show the full phrase, not one word.
+    let text: string
+    if (seg.isFinal) {
+      text = seg.text
+      this.partials.delete(id)
+    } else {
+      text = (this.partials.get(id) ?? '') + seg.text
+      this.partials.set(id, text)
     }
-    // Partial deltas replace the live item; finals are kept in history.
+
+    // Remember system audio so we can suppress its echo through the microphone.
+    if (seg.role === 'them' && text.trim()) {
+      this.recentThem.push({ norm: this.normalize(text), at: Date.now() })
+      if (this.recentThem.length > 30) this.recentThem.shift()
+    }
+    // Drop microphone text that just repeats what the speakers were playing.
+    if (seg.role === 'me' && this.isEchoOfThem(text)) {
+      this.partials.delete(id)
+      return
+    }
+
+    const segment: TranscriptSegment = { id, role: seg.role, text, isFinal: seg.isFinal, at: Date.now() }
     const idx = this.segments.findIndex((s) => s.id === id)
     if (idx >= 0) this.segments[idx] = segment
     else this.segments.push(segment)

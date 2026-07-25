@@ -19,6 +19,7 @@ export const IpcChannels = {
   ContextGetSnapshot: 'context:get-snapshot',
   ContextSetDocument: 'context:set-document',
   ContextGetDocument: 'context:get-document',
+  ContextParseFile: 'context:parse-file',
 
   SessionsList: 'sessions:list',
   SessionCreate: 'sessions:create',

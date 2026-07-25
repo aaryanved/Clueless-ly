@@ -4,6 +4,7 @@ import type { AiAskRequest, ContextSnapshot, TranscriptSegment } from '@shared/t
 import { orchestrator } from '../transcription/orchestrator'
 import { screenObserver } from './screen-observer'
 import { getPlatform } from '../platform'
+import { parseFileToText } from './file-parse'
 import {
   setAskContextProvider,
   setReferenceContext,
@@ -80,4 +81,7 @@ export function registerContextIpc(): void {
     setReferenceContext(text ?? '')
   )
   ipcMain.handle(IpcChannels.ContextGetDocument, async () => getReferenceContext())
+  ipcMain.handle(IpcChannels.ContextParseFile, async (_e, name: string, bytes: ArrayBuffer) =>
+    parseFileToText(name, bytes)
+  )
 }

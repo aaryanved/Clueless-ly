@@ -404,30 +404,38 @@ textarea {
 .drawer-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.32);
   display: flex;
   justify-content: flex-end;
   border-radius: var(--radius);
   overflow: hidden;
+  animation: scrim-in 0.24s ease;
+}
+@keyframes scrim-in {
+  from {
+    background: rgba(0, 0, 0, 0);
+  }
+  to {
+    background: rgba(0, 0, 0, 0.32);
+  }
 }
 .drawer {
   width: 400px;
   max-width: 88%;
   height: 100%;
   background: var(--surface);
-  border-left: 1px solid var(--border);
+  border-left: 0.5px solid var(--border);
   display: flex;
   flex-direction: column;
-  animation: slide-in 0.16s ease-out;
+  /* iOS-like ease: quick out, gentle settle, no overshoot. */
+  animation: slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 @keyframes slide-in {
   from {
-    transform: translateX(24px);
-    opacity: 0.4;
+    transform: translateX(100%);
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 .drawer__head {

@@ -44,7 +44,9 @@ const api = {
     getSnapshot: (): Promise<ContextSnapshot> => ipcRenderer.invoke(IpcChannels.ContextGetSnapshot),
     setDocument: (text: string): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.ContextSetDocument, text),
-    getDocument: (): Promise<string> => ipcRenderer.invoke(IpcChannels.ContextGetDocument)
+    getDocument: (): Promise<string> => ipcRenderer.invoke(IpcChannels.ContextGetDocument),
+    parseFile: (name: string, bytes: ArrayBuffer): Promise<string> =>
+      ipcRenderer.invoke(IpcChannels.ContextParseFile, name, bytes)
   },
 
   sessions: {
