@@ -41,6 +41,16 @@ export function setAnswerSink(fn: AnswerSink): void {
   answerSink = fn
 }
 
+// User-provided reference material (pasted text or a loaded document) that grounds
+// answers for the session until it is cleared.
+let referenceText = ''
+export function setReferenceContext(text: string): void {
+  referenceText = text.slice(0, 200_000) // guard against enormous pastes
+}
+export function getReferenceContext(): string {
+  return referenceText
+}
+
 // Short rolling memory of recent exchanges so follow-ups ("the same", "it") resolve.
 const history: Array<{ question: string; answer: string }> = []
 function pushHistory(question: string, answer: string): void {
@@ -73,10 +83,14 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
   try {
     const context = await contextProvider(req).catch(() => ({ text: '' }) as AskContext)
 
+    const reference = referenceText.trim()
+
     if (wantsWebSearch(req.question)) {
-      // Web-search path (text only): fold in recent history + on-screen context.
+      // Web-search path (text only): fold in reference material, history + context.
       const prompt =
-        `${SYSTEM_PROMPT}\n\n${historyText()}` +
+        `${SYSTEM_PROMPT}\n\n` +
+        (reference ? `Reference material from the user:\n${reference}\n\n` : '') +
+        `${historyText()}` +
         (context.text.trim() ? `On-screen conversation:\n${context.text}\n\n` : '') +
         `Task: ${req.question}`
       for await (const token of streamWebSearch(prompt)) {
@@ -85,6 +99,9 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
       }
     } else {
       const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }]
+      if (reference) {
+        messages.push({ role: 'system', content: `Reference material from the user:\n${reference}` })
+      }
       // Prior exchanges as real turns so follow-ups have continuity.
       for (const h of history) {
         messages.push({ role: 'user', content: h.question })

@@ -17,6 +17,8 @@ export const IpcChannels = {
 
   ContextCaptureScreen: 'context:capture-screen',
   ContextGetSnapshot: 'context:get-snapshot',
+  ContextSetDocument: 'context:set-document',
+  ContextGetDocument: 'context:get-document',
 
   SessionsList: 'sessions:list',
   SessionCreate: 'sessions:create',

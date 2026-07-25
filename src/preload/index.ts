@@ -41,7 +41,10 @@ const api = {
   context: {
     captureScreen: (): Promise<ScreenSnapshot | null> =>
       ipcRenderer.invoke(IpcChannels.ContextCaptureScreen),
-    getSnapshot: (): Promise<ContextSnapshot> => ipcRenderer.invoke(IpcChannels.ContextGetSnapshot)
+    getSnapshot: (): Promise<ContextSnapshot> => ipcRenderer.invoke(IpcChannels.ContextGetSnapshot),
+    setDocument: (text: string): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.ContextSetDocument, text),
+    getDocument: (): Promise<string> => ipcRenderer.invoke(IpcChannels.ContextGetDocument)
   },
 
   sessions: {
