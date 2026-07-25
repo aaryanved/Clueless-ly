@@ -5,13 +5,7 @@ import { orchestrator } from '../transcription/orchestrator'
 import { screenObserver } from './screen-observer'
 import { getPlatform } from '../platform'
 import { settingsService } from '../settings/settings-service'
-import { parseFileToText } from './file-parse'
-import {
-  setAskContextProvider,
-  setReferenceContext,
-  getReferenceContext,
-  type AskContext
-} from '../ai/ask-service'
+import { setAskContextProvider, type AskContext } from '../ai/ask-service'
 
 /** Rough token estimate: ~4 characters per token is close enough for budgeting. */
 export function estimateTokens(text: string): number {
@@ -94,11 +88,4 @@ export function registerContextIpc(): void {
 
   ipcMain.handle(IpcChannels.ContextCaptureScreen, async () => screenObserver.capture())
   ipcMain.handle(IpcChannels.ContextGetSnapshot, async () => contextEngine.getSnapshot())
-  ipcMain.handle(IpcChannels.ContextSetDocument, async (_e, text: string) =>
-    setReferenceContext(text ?? '')
-  )
-  ipcMain.handle(IpcChannels.ContextGetDocument, async () => getReferenceContext())
-  ipcMain.handle(IpcChannels.ContextParseFile, async (_e, name: string, bytes: ArrayBuffer) =>
-    parseFileToText(name, bytes)
-  )
 }

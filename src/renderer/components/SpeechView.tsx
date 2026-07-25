@@ -16,12 +16,12 @@ export function SpeechView(): JSX.Element {
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    window.clueless.context.getDocument().then(setSpeech).catch(() => {})
+    window.clueless.context.getAll().then((d) => setSpeech(d.speech.text)).catch(() => {})
   }, [])
 
   function save(next: string): void {
     setSpeech(next)
-    void window.clueless.context.setDocument(next)
+    void window.clueless.context.setSpeech(next)
   }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>): Promise<void> {

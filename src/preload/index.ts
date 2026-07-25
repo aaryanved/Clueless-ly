@@ -5,7 +5,9 @@ import type {
   AppSettings,
   AppStatus,
   ConfigStatus,
+  ContextData,
   ContextSnapshot,
+  InterviewContext,
   Note,
   PermissionKind,
   PermissionStatus,
@@ -43,9 +45,15 @@ const api = {
     captureScreen: (): Promise<ScreenSnapshot | null> =>
       ipcRenderer.invoke(IpcChannels.ContextCaptureScreen),
     getSnapshot: (): Promise<ContextSnapshot> => ipcRenderer.invoke(IpcChannels.ContextGetSnapshot),
-    setDocument: (text: string): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.ContextSetDocument, text),
-    getDocument: (): Promise<string> => ipcRenderer.invoke(IpcChannels.ContextGetDocument),
+    getAll: (): Promise<ContextData> => ipcRenderer.invoke(IpcChannels.ContextGetAll),
+    setUser: (text: string, saved: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.ContextSetUser, text, saved),
+    clearUser: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ContextClearUser),
+    setInterview: (patch: Partial<InterviewContext>, saved: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.ContextSetInterview, patch, saved),
+    clearInterview: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ContextClearInterview),
+    setSpeech: (text: string): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.ContextSetSpeech, text),
     parseFile: (name: string, bytes: ArrayBuffer): Promise<string> =>
       ipcRenderer.invoke(IpcChannels.ContextParseFile, name, bytes)
   },

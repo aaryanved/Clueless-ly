@@ -988,3 +988,135 @@ textarea {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ---- iOS-style switch ---- */
+.switch {
+  -webkit-app-region: no-drag;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: var(--panel-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+  cursor: pointer;
+  transition: background 0.18s ease;
+  flex: none;
+  padding: 0;
+}
+.switch--on {
+  background: var(--accent-2);
+  box-shadow: none;
+}
+.switch:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+.switch--on .switch__knob {
+  transform: translateX(16px);
+}
+
+/* ---- Mode rows / chevron ---- */
+.mode-row__ctrls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.chevron-btn {
+  -webkit-app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--panel-2);
+  border: 0.5px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+}
+.chevron-btn:hover {
+  color: var(--fg);
+}
+
+/* ---- Drawer back button ---- */
+.drawer__back {
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 7px;
+}
+.drawer__back:hover {
+  background: var(--panel-2);
+}
+
+/* ---- Context chip (saved user context) ---- */
+.ctx-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.ctx-chip__label {
+  font-weight: 600;
+  font-size: 13px;
+}
+.ctx-chip__x {
+  -webkit-app-region: no-drag;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.ctx-chip__x:hover {
+  background: rgba(255, 59, 48, 0.16);
+  color: #ff453a;
+}
+.ctx-submit {
+  margin-left: auto;
+}
+
+/* ---- Interview context fields ---- */
+.ctx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.ctx-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.context-input--sm {
+  min-height: 90px;
+}
+.btn--sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  align-self: flex-start;
+}

@@ -66,6 +66,27 @@ export interface ContextSnapshot {
   tokenEstimate: number
 }
 
+// Context material the user supplies. `user` is global (used for every answer);
+// `interview` is used when interview mode is on; `speech` when speech mode is on.
+export interface UserContext {
+  text: string
+  savedAt?: number
+}
+export interface InterviewContext {
+  jobDescription: string
+  resume: string
+  projects: string
+  savedAt?: number
+}
+export interface SpeechContext {
+  text: string
+}
+export interface ContextData {
+  user: UserContext
+  interview: InterviewContext
+  speech: SpeechContext
+}
+
 export interface Note {
   id: string
   at: number

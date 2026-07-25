@@ -5,6 +5,7 @@ import type { AiAskRequest } from '@shared/types'
 import { createLogger } from '../logging'
 import { events } from '../events'
 import { settingsService } from '../settings/settings-service'
+import { buildReference } from '../context/context-store'
 import type { AppModes } from '@shared/types'
 import { streamChat, streamWebSearch, type ChatMessage } from './openai-client'
 
@@ -97,16 +98,6 @@ export function setAnswerSink(fn: AnswerSink): void {
   answerSink = fn
 }
 
-// User-provided reference material (pasted text or a loaded document) that grounds
-// answers for the session until it is cleared.
-let referenceText = ''
-export function setReferenceContext(text: string): void {
-  referenceText = text.slice(0, 200_000) // guard against enormous pastes
-}
-export function getReferenceContext(): string {
-  return referenceText
-}
-
 // Short rolling memory of recent exchanges so follow-ups ("the same", "it") resolve.
 const history: Array<{ question: string; answer: string }> = []
 function pushHistory(question: string, answer: string): void {
@@ -139,7 +130,7 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
   try {
     const context = await contextProvider(req).catch(() => ({ text: '' }) as AskContext)
 
-    const reference = referenceText.trim()
+    const reference = buildReference().trim()
     const systemPrompt = buildSystemPrompt()
 
     if (wantsWebSearch(req.question)) {
