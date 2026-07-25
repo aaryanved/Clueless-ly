@@ -53,7 +53,8 @@ export class TranscriptionOrchestrator {
       return
     }
     this.active = true
-    events.status({ transcribing: true, message: 'Listening…' })
+    // No banner: the header dot + soundwave already indicate listening.
+    events.status({ transcribing: true })
     log.info('transcription started')
   }
 
@@ -62,7 +63,7 @@ export class TranscriptionOrchestrator {
     this.active = false
     for (const s of this.sessions.values()) s.close()
     this.sessions.clear()
-    events.status({ transcribing: false, message: 'Stopped listening.' })
+    events.status({ transcribing: false })
     log.info('transcription stopped')
   }
 
