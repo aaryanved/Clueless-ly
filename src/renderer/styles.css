@@ -364,8 +364,21 @@ textarea {
 .seg {
   display: flex;
   gap: 8px;
-  user-select: text;
   line-height: 1.4;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.seg:hover {
+  background: var(--panel-2);
 }
 .seg[data-final='false'] {
   opacity: 0.55;
@@ -375,9 +388,33 @@ textarea {
   min-width: 34px;
   font-size: 11px;
   padding-top: 1px;
+  flex: none;
+}
+.seg__text {
+  flex: 1;
 }
 .seg--them .seg__text {
   color: var(--accent);
+}
+
+/* ---- Soundwave (listening indicator) ---- */
+.wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+  margin-left: 8px;
+}
+.wave__bar {
+  width: 2px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--muted);
+  transform: scaleY(0.18);
+  transform-origin: center;
+}
+.wave[data-active='yes'] .wave__bar {
+  background: var(--danger);
 }
 
 .slider {

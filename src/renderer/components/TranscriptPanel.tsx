@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
 import { interactiveProps } from '../interactivity'
+import { Soundwave } from './Soundwave'
 
 /** Live transcript column. Segments stream in from the transcription orchestrator. */
 export function TranscriptPanel(): JSX.Element {
@@ -17,13 +18,13 @@ export function TranscriptPanel(): JSX.Element {
       <div className="transcript-col__head" {...interactiveProps()}>
         <span className="transcript-col__title">
           Live transcript
-          {state.transcribing && <span className="live-dot" title="Listening" />}
+          <Soundwave active={state.transcribing} />
         </span>
         <button className="link-btn" onClick={() => dispatch({ type: 'clearTranscript' })}>
           Clear
         </button>
       </div>
-      <div className="transcript">
+      <div className="transcript" {...interactiveProps()}>
         {state.transcript.length === 0 && (
           <p className="muted small">
             {state.transcribing
@@ -32,10 +33,16 @@ export function TranscriptPanel(): JSX.Element {
           </p>
         )}
         {state.transcript.map((s) => (
-          <div key={s.id} className={`seg seg--${s.role}`} data-final={s.isFinal}>
+          <button
+            key={s.id}
+            className={`seg seg--${s.role}`}
+            data-final={s.isFinal}
+            title="Click to ask about this line"
+            onClick={() => s.text.trim() && dispatch({ type: 'prefillAsk', text: s.text.trim() })}
+          >
             <span className="seg__who">{s.role === 'me' ? 'You' : s.role === 'them' ? 'Them' : '·'}</span>
             <span className="seg__text">{s.text}</span>
-          </div>
+          </button>
         ))}
         <div ref={endRef} />
       </div>

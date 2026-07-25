@@ -40,6 +40,9 @@ export interface UiState {
   sessions: SessionSummary[]
   transcribing: boolean
   banner: { kind: 'error' | 'info'; text: string } | null
+  // Text to drop into the ask box (e.g. from clicking a transcript line). The bump
+  // counter makes repeated identical prefills still register in the input effect.
+  prefill: { text: string; bump: number }
 }
 
 const initialState: UiState = {
@@ -50,7 +53,8 @@ const initialState: UiState = {
   messages: [],
   sessions: [],
   transcribing: false,
-  banner: null
+  banner: null,
+  prefill: { text: '', bump: 0 }
 }
 
 type Action =
@@ -66,6 +70,7 @@ type Action =
   | { type: 'finishMessage'; id: string; text: string }
   | { type: 'setTranscribing'; value: boolean }
   | { type: 'banner'; banner: UiState['banner'] }
+  | { type: 'prefillAsk'; text: string }
 
 function reducer(state: UiState, action: Action): UiState {
   switch (action.type) {
@@ -114,6 +119,8 @@ function reducer(state: UiState, action: Action): UiState {
       return { ...state, transcribing: action.value }
     case 'banner':
       return { ...state, banner: action.banner }
+    case 'prefillAsk':
+      return { ...state, prefill: { text: action.text, bump: state.prefill.bump + 1 } }
     default:
       return state
   }

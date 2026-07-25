@@ -6,7 +6,7 @@ import { setEventTarget } from './events'
 import { configStatus, getConfig } from './config'
 import { registerAiIpc, clearAskHistory } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
-import { registerAutoAnswer } from './transcription/auto-answer'
+import { registerAutoAnswer, setAutoAnswerPaused } from './transcription/auto-answer'
 import { registerContextIpc, contextEngine } from './context/context-engine'
 import { screenObserver } from './context/screen-observer'
 import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
@@ -110,6 +110,8 @@ async function bootstrap(): Promise<void> {
   })
   ipcMain.handle(IpcChannels.OverlaySetMinimized, async (_e, minimized: boolean) => {
     if (!overlay) return
+    // Minimized: keep transcribing, but stop auto-answering spoken prompts.
+    setAutoAnswerPaused(minimized)
     if (minimized) minimizeToPill(overlay)
     else restoreFromPill(overlay, settingsService.get().windowLayout)
   })

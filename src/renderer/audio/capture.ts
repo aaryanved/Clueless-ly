@@ -1,3 +1,5 @@
+import { setAudioLevel } from './level'
+
 // Only microphone ('me') and system audio ('them') are captured as audio sources.
 type CaptureRole = 'me' | 'them'
 
@@ -98,6 +100,11 @@ export class CaptureManager {
 
     processor.onaudioprocess = (e) => {
       const input = e.inputBuffer.getChannelData(0)
+      // RMS level for the soundwave indicator (scaled so normal speech reads ~mid).
+      let sum = 0
+      for (let i = 0; i < input.length; i++) sum += input[i] * input[i]
+      const rms = Math.sqrt(sum / input.length)
+      setAudioLevel(Math.min(1, rms * 4))
       const pcm = floatToPcm16(input)
       void window.clueless.transcription.pushAudio(role, pcm)
     }

@@ -7,11 +7,19 @@ export function AssistantPanel(): JSX.Element {
   const { state, dispatch } = useStore()
   const [question, setQuestion] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Keep the latest answer in view as tokens stream in.
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
   }, [state.messages])
+
+  // Clicking a transcript line drops its text into the ask box, ready to send.
+  useEffect(() => {
+    if (state.prefill.bump === 0) return
+    setQuestion(state.prefill.text)
+    inputRef.current?.focus()
+  }, [state.prefill.bump])
 
   async function ask(): Promise<void> {
     const q = question.trim()
@@ -55,6 +63,7 @@ export function AssistantPanel(): JSX.Element {
       <div className="ask" {...interactiveProps()}>
         <div className="ask__row">
           <textarea
+            ref={inputRef}
             className="ask__input"
             placeholder="Ask anything…  (Enter to send, Shift+Enter for a new line)"
             value={question}
