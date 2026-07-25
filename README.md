@@ -4,8 +4,8 @@ The complete macOS build of Clueless-ly — a private, always-on-top AI assistan
 overlay with realtime transcription (microphone + system audio), on-demand screen
 context, and an overlay that is excluded from ordinary screen sharing.
 
-This branch = the shared core from [`dev`](../../tree/dev) **plus** the real macOS
-platform implementation.
+This branch = the shared app **plus** the real macOS platform implementation. See
+[ARCHITECTURE.md](./ARCHITECTURE.md) for how the codebase is organised.
 
 ## Requirements
 
