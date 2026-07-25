@@ -58,7 +58,7 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
 
 /**
  * Start an answer stream. `announce: true` first emits an ai-question event so the UI
- * can create a message bubble — used for auto-answers where the renderer did not
+ * can create a message bubble - used for auto-answers where the renderer did not
  * initiate the request. Manual asks create their bubble from the invoke() return value.
  */
 export function startAsk(req: AiAskRequest, opts: { announce?: boolean } = {}): string {

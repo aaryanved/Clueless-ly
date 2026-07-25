@@ -2,23 +2,29 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { useListening } from '../audio/use-listening'
 import { interactiveProps } from '../interactivity'
+import { applyAppearance } from '../appearance'
 import { AssistantPanel } from './AssistantPanel'
 import { TranscriptPanel } from './TranscriptPanel'
 import { SettingsDrawer } from './SettingsDrawer'
 
 export function OverlayShell(): JSX.Element {
   const { state, dispatch } = useStore()
-  const { transcribing, start } = useListening()
+  const { start } = useListening()
   const [showSettings, setShowSettings] = useState(false)
   const autoStarted = useRef(false)
 
-  // Listening turns on automatically once settings have loaded — no button required.
+  // Listening turns on automatically once settings have loaded; no button required.
   useEffect(() => {
     if (autoStarted.current) return
     if (!state.settings) return
     autoStarted.current = true
     void start().catch(() => {})
   }, [state.settings, start])
+
+  // Keep theme / opacity / click-through in sync with settings.
+  useEffect(() => {
+    if (state.settings) applyAppearance(state.settings)
+  }, [state.settings])
 
   return (
     <div className="app">
@@ -28,14 +34,10 @@ export function OverlayShell(): JSX.Element {
             <span className="brand__dot" data-ready={state.status?.ready ? 'yes' : 'no'} />
             Clueless-ly
           </span>
+          <span className="brand__by">by AVB</span>
         </div>
 
         <div className="topbar__right">
-          <span
-            className="live-indicator"
-            data-on={transcribing ? 'yes' : 'no'}
-            title={transcribing ? 'Listening' : 'Not listening'}
-          />
           <button
             className="icon-btn"
             title="Settings & sessions"

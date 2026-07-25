@@ -15,8 +15,8 @@ const SETTINGS_URI: Record<PermissionKind, string> = {
 /**
  * Windows permission model. Microphone access is gated by the Windows privacy setting
  * and reported via getMediaAccessStatus. Windows has no per-app "screen recording"
- * permission — screen and system-audio (WASAPI loopback) capture are allowed without a
- * separate grant — so screen reports 'granted'.
+ * permission - screen and system-audio (WASAPI loopback) capture are allowed without a
+ * separate grant - so screen reports 'granted'.
  */
 export class Win32Permissions implements PermissionAdapter {
   async check(kind: PermissionKind): Promise<PermissionStatus> {

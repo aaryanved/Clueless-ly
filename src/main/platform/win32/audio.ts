@@ -4,7 +4,7 @@ import type { AudioAdapter, AudioCapabilities } from '../contracts'
  * Windows audio capabilities. System audio is captured via WASAPI loopback, exposed to
  * Chromium through getDisplayMedia and granted by the main process with
  * `audio: 'loopback'` in the display-media request handler. This captures the audio the
- * machine is actually rendering (the "them" side of a call) — it is NOT a microphone
+ * machine is actually rendering (the "them" side of a call) - it is NOT a microphone
  * loopback. The renderer watches for output-device changes and re-acquires the stream
  * so switching to headphones / Bluetooth / USB devices keeps transcription running.
  */

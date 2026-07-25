@@ -22,7 +22,8 @@ export function createOverlayWindow(platform: PlatformAdapter): BrowserWindow {
     minWidth: 720,
     minHeight: 460,
     x: wa.x + Math.round((wa.width - width) / 2),
-    y: wa.y + Math.round((wa.height - height) / 2),
+    // Sit in the upper portion of the screen rather than dead-centre.
+    y: wa.y + Math.max(24, Math.round((wa.height - height) * 0.22)),
     frame: false,
     transparent: true,
     resizable: true,

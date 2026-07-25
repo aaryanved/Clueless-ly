@@ -14,7 +14,9 @@ export function defaultSettings(platform: PlatformAdapter): AppSettings {
     systemAudioEnabled: audio.systemAudio,
     microphoneEnabled: true,
     contentProtectionEnabled: platform.window.supportsContentProtection(),
-    overlayOpacity: 1,
+    clickThroughEnabled: true,
+    theme: 'dark',
+    overlayOpacity: 0.52,
     maxContextTokens: 2000,
     shortcuts: platform.shortcuts.defaults()
   }

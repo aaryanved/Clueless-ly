@@ -31,7 +31,7 @@ export interface PlatformDescription {
 }
 
 export interface ConfigStatus {
-  // We never expose the key itself — only whether it is present and well-formed.
+  // We never expose the key itself - only whether it is present and well-formed.
   openaiKeyPresent: boolean
   openaiKeyLooksValid: boolean
   model: string
@@ -92,6 +92,8 @@ export interface SessionSummary {
   segmentCount: number
 }
 
+export type ThemeMode = 'dark' | 'light'
+
 export interface AppSettings {
   model: string
   transcriptionModel: string
@@ -100,6 +102,8 @@ export interface AppSettings {
   systemAudioEnabled: boolean
   microphoneEnabled: boolean
   contentProtectionEnabled: boolean
+  clickThroughEnabled: boolean
+  theme: ThemeMode
   overlayOpacity: number
   maxContextTokens: number
   shortcuts: Record<string, string>

@@ -35,7 +35,7 @@ export function AssistantPanel(): JSX.Element {
       <div className="messages">
         {state.messages.length === 0 && (
           <p className="muted">
-            Listening is on. Ask anything about what's on your screen or being said — and
+            Listening is on. Ask anything about what's on your screen or being said, and
             questions heard in the conversation are answered automatically.
           </p>
         )}
