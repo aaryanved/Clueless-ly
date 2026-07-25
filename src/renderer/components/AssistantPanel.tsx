@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { interactiveProps } from '../interactivity'
+import { Markdown } from './Markdown'
 
 export function AssistantPanel(): JSX.Element {
   const { state, dispatch } = useStore()
@@ -43,7 +44,7 @@ export function AssistantPanel(): JSX.Element {
           <div key={m.id} className="msg">
             <div className="msg__q">{m.question}</div>
             <div className="msg__a">
-              {m.answer || (m.streaming ? '…' : '')}
+              {m.answer ? <Markdown text={m.answer} /> : m.streaming ? <span className="muted">…</span> : null}
               {m.streaming && <span className="cursor">▍</span>}
             </div>
           </div>

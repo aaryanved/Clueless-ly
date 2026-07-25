@@ -1,7 +1,9 @@
 import { join } from 'node:path'
-import { BrowserWindow, screen, shell } from 'electron'
+import { BrowserWindow, shell } from 'electron'
 import { createLogger } from './logging'
 import type { PlatformAdapter } from './platform'
+import type { WindowLayout } from '@shared/types'
+import { computeLayoutBounds } from './window-layout'
 
 const log = createLogger('overlay-window')
 
@@ -9,21 +11,17 @@ const log = createLogger('overlay-window')
  * Creates the always-on-top, frameless, transparent overlay window and applies the
  * platform's overlay behaviour (content protection, all-workspaces visibility, etc).
  */
-export function createOverlayWindow(platform: PlatformAdapter): BrowserWindow {
-  const primary = screen.getPrimaryDisplay()
-  const wa = primary.workArea
-  // Large, centered overlay (roughly two-thirds of the work area).
-  const width = Math.min(1180, Math.round(wa.width * 0.74))
-  const height = Math.min(760, Math.round(wa.height * 0.74))
+export function createOverlayWindow(
+  platform: PlatformAdapter,
+  layout: WindowLayout = 'center'
+): BrowserWindow {
+  const bounds = computeLayoutBounds(layout)
 
   const win = new BrowserWindow({
-    width,
-    height,
-    minWidth: 720,
-    minHeight: 460,
-    x: wa.x + Math.round((wa.width - width) / 2),
-    // Sit in the upper portion of the screen rather than dead-centre.
-    y: wa.y + Math.max(24, Math.round((wa.height - height) * 0.22)),
+    ...bounds,
+    // Small minimums so the window can shrink to the side layout or the minimized pill.
+    minWidth: 200,
+    minHeight: 34,
     frame: false,
     transparent: true,
     resizable: true,

@@ -37,6 +37,8 @@ export const IpcChannels = {
 
   OverlayToggleClickThrough: 'overlay:toggle-click-through',
   OverlaySetInteractive: 'overlay:set-interactive',
+  OverlaySetMinimized: 'overlay:set-minimized',
+  OverlaySetLayout: 'overlay:set-layout',
   OverlaySetContentProtection: 'overlay:set-content-protection',
   OverlayHide: 'overlay:hide',
   OverlayShow: 'overlay:show',

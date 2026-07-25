@@ -47,6 +47,25 @@ export async function* streamChat(
   }
 }
 
+/**
+ * Stream an answer that can browse the web, via the Responses API web_search tool.
+ * Used when the user explicitly asks to search online / look something up.
+ */
+export async function* streamWebSearch(
+  prompt: string,
+  opts: { model?: string; signal?: AbortSignal } = {}
+): AsyncGenerator<string, void, unknown> {
+  const openai = getOpenAI()
+  const model = opts.model ?? getConfig().model
+  const stream = await openai.responses.create(
+    { model, input: prompt, tools: [{ type: 'web_search_preview' }], stream: true },
+    { signal: opts.signal }
+  )
+  for await (const event of stream as AsyncIterable<{ type: string; delta?: string }>) {
+    if (event.type === 'response.output_text.delta' && event.delta) yield event.delta
+  }
+}
+
 /** Non-streaming convenience wrapper (used for summaries and short calls). */
 export async function complete(
   messages: ChatMessage[],

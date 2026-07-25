@@ -4,7 +4,7 @@ import { resolvePlatform } from './platform'
 import { createOverlayWindow } from './overlay-window'
 import { setEventTarget } from './events'
 import { configStatus, getConfig } from './config'
-import { registerAiIpc } from './ai/ask-service'
+import { registerAiIpc, clearAskHistory } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
 import { registerAutoAnswer } from './transcription/auto-answer'
 import { registerContextIpc, contextEngine } from './context/context-engine'
@@ -13,6 +13,7 @@ import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { settingsService, registerSettingsIpc } from './settings/settings-service'
 import { defaultSettings } from './settings/defaults'
 import { setupShortcuts } from './shortcuts'
+import { applyLayout, minimizeToPill, restoreFromPill } from './window-layout'
 import { setupDisplayMediaHandler } from './capture-grant'
 import { createTray } from './tray'
 import { applyWebContentsHardening, requestSingleInstance } from './hardening'
@@ -67,6 +68,7 @@ async function bootstrap(): Promise<void> {
   ipcMain.handle(IpcChannels.SessionNewConversation, async () => {
     orchestrator.clearTranscript()
     screenObserver.clear()
+    clearAskHistory()
     await sessionManager.create()
   })
 
@@ -79,7 +81,7 @@ async function bootstrap(): Promise<void> {
 
   setupDisplayMediaHandler(platform)
 
-  overlay = createOverlayWindow(platform)
+  overlay = createOverlayWindow(platform, initial.windowLayout)
   setEventTarget(overlay)
   platform.window.setContentProtection(overlay, initial.contentProtectionEnabled)
   setupShortcuts(platform, overlay, initial.shortcuts)
@@ -106,6 +108,14 @@ async function bootstrap(): Promise<void> {
     overlay?.show()
     overlay?.focus()
   })
+  ipcMain.handle(IpcChannels.OverlaySetMinimized, async (_e, minimized: boolean) => {
+    if (!overlay) return
+    if (minimized) minimizeToPill(overlay)
+    else restoreFromPill(overlay, settingsService.get().windowLayout)
+  })
+  ipcMain.handle(IpcChannels.OverlaySetLayout, async (_e, layout) => {
+    if (overlay) applyLayout(overlay, layout)
+  })
 
   // Apply settings side effects on change.
   settingsService.onChange((next, patch) => {
@@ -114,6 +124,7 @@ async function bootstrap(): Promise<void> {
     }
     if (patch.maxContextTokens !== undefined) contextEngine.setMaxTokens(next.maxContextTokens)
     if (patch.shortcuts && overlay) setupShortcuts(platform, overlay, next.shortcuts)
+    if (patch.windowLayout && overlay) applyLayout(overlay, next.windowLayout)
   })
 
   const status = configStatus()
@@ -129,10 +140,11 @@ async function bootstrap(): Promise<void> {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      overlay = createOverlayWindow(platform)
+      const s = settingsService.get()
+      overlay = createOverlayWindow(platform, s.windowLayout)
       setEventTarget(overlay)
-      platform.window.setContentProtection(overlay, settingsService.get().contentProtectionEnabled)
-      setupShortcuts(platform, overlay, settingsService.get().shortcuts)
+      platform.window.setContentProtection(overlay, s.contentProtectionEnabled)
+      setupShortcuts(platform, overlay, s.shortcuts)
     }
   })
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { useListening } from '../audio/use-listening'
-import { interactiveProps } from '../interactivity'
+import { interactiveProps, enterInteractive, leaveInteractive } from '../interactivity'
 import { applyAppearance } from '../appearance'
 import { AssistantPanel } from './AssistantPanel'
 import { TranscriptPanel } from './TranscriptPanel'
@@ -11,6 +11,7 @@ export function OverlayShell(): JSX.Element {
   const { state, dispatch } = useStore()
   const { start } = useListening()
   const [showSettings, setShowSettings] = useState(false)
+  const [minimized, setMinimized] = useState(false)
   const autoStarted = useRef(false)
 
   // Listening turns on automatically once settings have loaded; no button required.
@@ -36,6 +37,17 @@ export function OverlayShell(): JSX.Element {
     dispatch({ type: 'clearTranscript' })
   }
 
+  async function minimize(): Promise<void> {
+    await window.clueless.overlay.setMinimized(true).catch(() => {})
+    setMinimized(true)
+  }
+  async function restore(): Promise<void> {
+    await window.clueless.overlay.setMinimized(false).catch(() => {})
+    setMinimized(false)
+  }
+
+  if (minimized) return <Pill live={state.transcribing} onClick={() => void restore()} />
+
   return (
     <div className="app">
       <header className="topbar">
@@ -48,20 +60,13 @@ export function OverlayShell(): JSX.Element {
         </div>
 
         <div className="topbar__right">
-          <button
-            className="icon-btn"
-            title="New conversation"
-            onClick={() => void newConversation()}
-            {...interactiveProps()}
-          >
+          <button className="icon-btn" title="New conversation" onClick={() => void newConversation()} {...interactiveProps()}>
             <PlusIcon />
           </button>
-          <button
-            className="icon-btn"
-            title="Settings & sessions"
-            onClick={() => setShowSettings(true)}
-            {...interactiveProps()}
-          >
+          <button className="icon-btn" title="Minimize" onClick={() => void minimize()} {...interactiveProps()}>
+            <MinimizeIcon />
+          </button>
+          <button className="icon-btn" title="Settings & sessions" onClick={() => setShowSettings(true)} {...interactiveProps()}>
             <GearIcon />
           </button>
         </div>
@@ -91,19 +96,32 @@ export function OverlayShell(): JSX.Element {
   )
 }
 
+function Pill({ live, onClick }: { live: boolean; onClick: () => void }): JSX.Element {
+  // Force interactivity while minimized so a click always restores the window.
+  useEffect(() => {
+    enterInteractive()
+    return () => leaveInteractive()
+  }, [])
+  return (
+    <div className="pill" onClick={onClick} title="Click to expand">
+      <span className="pill__dot" data-on={live ? 'yes' : 'no'} />
+      <span className="pill__label">Clueless-ly</span>
+    </div>
+  )
+}
+
 function PlusIcon(): JSX.Element {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden
-    >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function MinimizeIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+      <path d="M6 12h12" />
     </svg>
   )
 }

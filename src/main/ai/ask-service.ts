@@ -4,22 +4,23 @@ import { IpcChannels } from '@shared/ipc'
 import type { AiAskRequest } from '@shared/types'
 import { createLogger } from '../logging'
 import { events } from '../events'
-import { streamChat, type ChatMessage } from './openai-client'
+import { streamChat, streamWebSearch, type ChatMessage } from './openai-client'
 
 const log = createLogger('ai:ask')
 
 const SYSTEM_PROMPT =
-  'You are Clueless-ly, a discreet real-time on-screen assistant. Answer concisely and ' +
-  'directly. When a screenshot of the user\'s screen is provided, read it carefully and ' +
-  'transcribe any relevant on-screen text (titles, prices, labels, specs) exactly as ' +
-  'written before answering. When conversation context is provided, ground your answer ' +
-  'in it. If the information is insufficient, say what you would need rather than ' +
-  'inventing details.'
+  'You are Clueless-ly, a discreet real-time on-screen assistant. Treat everything the ' +
+  'user says or types - questions, requests, and instructions (for example "give me the ' +
+  'code for a for loop in Java") - as a task to carry out directly and concisely. When a ' +
+  'screenshot of the screen is provided, read it carefully and quote relevant on-screen ' +
+  'text (titles, prices, labels, specs) exactly. Use the recent conversation to resolve ' +
+  'follow-ups like "the same" or "it". Format answers in Markdown: use **bold** for key ' +
+  'points and fenced code blocks with a language tag for any code. If information is ' +
+  'insufficient, say what you would need rather than inventing details.'
 
 /**
- * Grounding context for a question: transcript text plus, optionally, a screenshot of
- * the current screen that is passed directly to the vision model (higher fidelity than
- * a pre-summarised description).
+ * Grounding context for a request: transcript text plus, optionally, a screenshot of
+ * the current screen passed directly to the vision model.
  */
 export interface AskContext {
   text: string
@@ -33,46 +34,90 @@ export function setAskContextProvider(fn: AskContextProvider): void {
   contextProvider = fn
 }
 
-/** Hook that lets Batch 6 persist finished answers to the active session. */
+/** Hook that lets the session manager persist finished answers. */
 export type AnswerSink = (req: AiAskRequest, question: string, answer: string) => void
 let answerSink: AnswerSink = () => {}
 export function setAnswerSink(fn: AnswerSink): void {
   answerSink = fn
 }
 
+// Short rolling memory of recent exchanges so follow-ups ("the same", "it") resolve.
+const history: Array<{ question: string; answer: string }> = []
+function pushHistory(question: string, answer: string): void {
+  if (!answer.trim()) return
+  history.push({ question, answer })
+  while (history.length > 6) history.shift()
+}
+export function clearAskHistory(): void {
+  history.length = 0
+}
+
+// Detect an explicit request to search the web.
+const SEARCH_INTENT =
+  /\b(search (online|the web|for|up)|look (it |this |that )?up|google|on the (web|internet)|browse|latest news|up to date|most recent)\b/i
+function wantsWebSearch(text: string): boolean {
+  return SEARCH_INTENT.test(text)
+}
+
+function historyText(): string {
+  if (!history.length) return ''
+  return (
+    'Recent conversation:\n' +
+    history.map((h) => `User: ${h.question}\nAssistant: ${h.answer}`).join('\n') +
+    '\n'
+  )
+}
+
 async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
   let answer = ''
   try {
     const context = await contextProvider(req).catch(() => ({ text: '' }) as AskContext)
-    const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }]
-    if (context.text.trim()) {
-      messages.push({ role: 'system', content: `Conversation context:\n${context.text}` })
-    }
-    // Pass the screenshot directly to the model (high detail) alongside the question.
-    if (context.imageDataUrl) {
-      messages.push({
-        role: 'user',
-        content: [
-          { type: 'text', text: req.question },
-          { type: 'image_url', image_url: { url: context.imageDataUrl, detail: 'high' } }
-        ]
-      })
+
+    if (wantsWebSearch(req.question)) {
+      // Web-search path (text only): fold in recent history + on-screen context.
+      const prompt =
+        `${SYSTEM_PROMPT}\n\n${historyText()}` +
+        (context.text.trim() ? `On-screen conversation:\n${context.text}\n\n` : '') +
+        `Task: ${req.question}`
+      for await (const token of streamWebSearch(prompt)) {
+        answer += token
+        events.aiToken({ requestId, token })
+      }
     } else {
-      messages.push({ role: 'user', content: req.question })
+      const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }]
+      // Prior exchanges as real turns so follow-ups have continuity.
+      for (const h of history) {
+        messages.push({ role: 'user', content: h.question })
+        messages.push({ role: 'assistant', content: h.answer })
+      }
+      if (context.text.trim()) {
+        messages.push({ role: 'system', content: `On-screen conversation:\n${context.text}` })
+      }
+      if (context.imageDataUrl) {
+        messages.push({
+          role: 'user',
+          content: [
+            { type: 'text', text: req.question },
+            { type: 'image_url', image_url: { url: context.imageDataUrl, detail: 'high' } }
+          ]
+        })
+      } else {
+        messages.push({ role: 'user', content: req.question })
+      }
+      for await (const token of streamChat(messages)) {
+        answer += token
+        events.aiToken({ requestId, token })
+      }
     }
 
-    for await (const token of streamChat(messages)) {
-      answer += token
-      events.aiToken({ requestId, token })
-    }
     events.aiDone({ requestId, text: answer })
+    pushHistory(req.question, answer)
     answerSink(req, req.question, answer)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     log.warn('ask failed', { err })
     events.error({ scope: 'ai', message })
-    // Still close out the message so the UI stops showing a spinner.
-    events.aiDone({ requestId, text: answer || `⚠️ ${message}` })
+    events.aiDone({ requestId, text: answer || `Something went wrong: ${message}` })
   }
 }
 

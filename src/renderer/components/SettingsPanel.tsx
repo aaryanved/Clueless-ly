@@ -50,6 +50,29 @@ export function SettingsPanel(): JSX.Element {
           value={settings?.overlayOpacity ?? 0.52}
           onChange={(e) => patch({ overlayOpacity: Number(e.target.value) })}
         />
+        <div className="row">
+          <span>Window</span>
+          <div className="drawer__switch">
+            <button
+              className={settings?.windowLayout === 'left' ? 'seg-btn seg-btn--on' : 'seg-btn'}
+              onClick={() => patch({ windowLayout: 'left' })}
+            >
+              Left
+            </button>
+            <button
+              className={settings?.windowLayout === 'center' ? 'seg-btn seg-btn--on' : 'seg-btn'}
+              onClick={() => patch({ windowLayout: 'center' })}
+            >
+              Center
+            </button>
+            <button
+              className={settings?.windowLayout === 'right' ? 'seg-btn seg-btn--on' : 'seg-btn'}
+              onClick={() => patch({ windowLayout: 'right' })}
+            >
+              Right
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className="group">
