@@ -76,6 +76,15 @@ export function OverlayShell(): JSX.Element {
         </button>
 
         <div className="topbar__zone topbar__zone--right">
+          {state.settings?.pushToTalk && (
+            <button
+              className={state.talkActive ? 'icon-btn icon-btn--talk-on' : 'icon-btn'}
+              title={state.talkActive ? 'Mic on — click or press the talk key to mute' : 'Mic off — click or press the talk key to talk'}
+              onClick={() => void window.clueless.toggleTalk()}
+            >
+              <MicIcon on={!!state.talkActive} />
+            </button>
+          )}
           {transcriptHidden && (
             <button
               className={showTranscript ? 'icon-btn icon-btn--on' : 'icon-btn'}
@@ -174,6 +183,16 @@ function TranscriptIcon(): JSX.Element {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
       <path d="M4 7h16M4 12h10M4 17h13" />
+    </svg>
+  )
+}
+
+function MicIcon({ on }: { on: boolean }): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+      {!on && <path d="M4 4l16 16" stroke="currentColor" strokeWidth="1.7" />}
     </svg>
   )
 }

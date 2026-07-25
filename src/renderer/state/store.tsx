@@ -17,6 +17,7 @@ import type {
   SessionSummary,
   ShortcutEvent,
   StatusEvent,
+  TalkEvent,
   TranscriptEvent,
   TranscriptSegment
 } from '@shared/types'
@@ -39,6 +40,8 @@ export interface UiState {
   messages: AiMessage[]
   sessions: SessionSummary[]
   transcribing: boolean
+  // Push-to-talk mic state (toggled by the talk hotkey).
+  talkActive: boolean
   banner: { kind: 'error' | 'info'; text: string } | null
   // Text to drop into the ask box (e.g. from clicking a transcript line). The bump
   // counter makes repeated identical prefills still register in the input effect.
@@ -53,6 +56,7 @@ const initialState: UiState = {
   messages: [],
   sessions: [],
   transcribing: false,
+  talkActive: false,
   banner: null,
   prefill: { text: '', bump: 0 }
 }
@@ -69,6 +73,7 @@ type Action =
   | { type: 'appendToken'; id: string; token: string }
   | { type: 'finishMessage'; id: string; text: string }
   | { type: 'setTranscribing'; value: boolean }
+  | { type: 'setTalkActive'; value: boolean }
   | { type: 'banner'; banner: UiState['banner'] }
   | { type: 'prefillAsk'; text: string }
 
@@ -117,6 +122,8 @@ function reducer(state: UiState, action: Action): UiState {
       }
     case 'setTranscribing':
       return { ...state, transcribing: action.value }
+    case 'setTalkActive':
+      return { ...state, talkActive: action.value }
     case 'banner':
       return { ...state, banner: action.banner }
     case 'prefillAsk':
@@ -167,6 +174,9 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       window.clueless.on.shortcut((p) => {
         const e = p as ShortcutEvent
         if (e.action === 'askQuestion') d({ type: 'setTab', tab: 'assistant' })
+      }),
+      window.clueless.on.talk((p) => {
+        d({ type: 'setTalkActive', value: (p as TalkEvent).active })
       })
     ]
 

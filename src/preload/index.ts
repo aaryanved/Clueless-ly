@@ -20,6 +20,7 @@ import type {
 const api = {
   getStatus: (): Promise<AppStatus> => ipcRenderer.invoke(IpcChannels.AppGetStatus),
   quit: (): Promise<void> => ipcRenderer.invoke(IpcChannels.AppQuit),
+  toggleTalk: (): Promise<boolean> => ipcRenderer.invoke(IpcChannels.TalkToggle),
 
   config: {
     get: (): Promise<ConfigStatus> => ipcRenderer.invoke(IpcChannels.ConfigGet),
@@ -99,7 +100,8 @@ const api = {
     aiDone: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtAiDone, cb),
     status: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtStatus, cb),
     error: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtError, cb),
-    shortcut: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtShortcut, cb)
+    shortcut: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtShortcut, cb),
+    talk: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtTalk, cb)
   }
 }
 

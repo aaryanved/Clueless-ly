@@ -13,7 +13,10 @@ export function useListening(): {
   start: () => Promise<void>
 } {
   const { state, dispatch } = useStore()
-  const micOn = state.settings?.microphoneEnabled !== false
+  const micEnabled = state.settings?.microphoneEnabled !== false
+  // With push-to-talk, the mic follows the talk toggle; otherwise it follows the
+  // Microphone setting. This keeps your voice out of the transcript unless you intend it.
+  const micOn = state.settings?.pushToTalk ? state.talkActive : micEnabled
   const sysOn = !!state.settings?.systemAudioEnabled
   const sysSupported = !!state.status?.platform.systemAudio.supported
 
