@@ -26,17 +26,9 @@ export function AssistantPanel({
     endRef.current?.scrollIntoView({ block: 'end' })
   }, [state.messages])
 
-  // Clicking a transcript line drops its text into the ask box, ready to send.
-  useEffect(() => {
-    if (state.prefill.bump === 0) return
-    setQuestion(state.prefill.text)
-    inputRef.current?.focus()
-  }, [state.prefill.bump])
-
-  async function ask(): Promise<void> {
-    const q = question.trim()
+  async function askText(text: string): Promise<void> {
+    const q = text.trim()
     if (!q) return
-    setQuestion('')
     try {
       const { requestId } = await window.clueless.ai.ask({
         question: q,
@@ -49,6 +41,21 @@ export function AssistantPanel({
     } catch (err) {
       dispatch({ type: 'banner', banner: { kind: 'error', text: `Ask failed: ${String(err)}` } })
     }
+  }
+
+  // Clicking a transcript line pastes it into the box and sends it immediately.
+  useEffect(() => {
+    if (state.prefill.bump === 0) return
+    setQuestion('')
+    void askText(state.prefill.text)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.prefill.bump])
+
+  async function ask(): Promise<void> {
+    const q = question.trim()
+    if (!q) return
+    setQuestion('')
+    await askText(q)
   }
 
   return (

@@ -37,7 +37,7 @@ export function TranscriptPanel(): JSX.Element {
             key={s.id}
             className={`seg seg--${s.role}`}
             data-final={s.isFinal}
-            title="Click to ask about this line"
+            title="Click to ask this"
             onClick={() => s.text.trim() && dispatch({ type: 'prefillAsk', text: s.text.trim() })}
           >
             <span className="seg__who">
