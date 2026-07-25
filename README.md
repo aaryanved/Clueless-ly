@@ -1,8 +1,16 @@
 <h1 align="center">Clueless-ly</h1>
 
 <p align="center">
-  A private, always-on-top AI assistant overlay for <b>macOS</b> and <b>Windows</b>.<br/>
-  Real-time transcription · on-demand screen context · excluded from screen sharing.
+  A private, always-on-top AI assistant overlay for macOS and Windows.<br/>
+  Real-time transcription, on-demand screen context, excluded from screen sharing.
+</p>
+
+<p align="center">
+  <img alt="macOS: ready to test" src="https://img.shields.io/badge/macOS-ready%20to%20test-32d74b?logo=apple&logoColor=white" />
+  <img alt="Windows: work in progress" src="https://img.shields.io/badge/Windows-work%20in%20progress-f5a623?logo=windows&logoColor=white" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-2c2e3b?logo=electron&logoColor=9feaf9" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white" />
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue" />
 </p>
 
 ---
@@ -18,124 +26,50 @@ It uses the **OpenAI API** for transcription and answers. You bring your own API
 
 ## Project status
 
-> 🍎 **macOS — ready to test.** The macOS build is functional end to end: realtime
-> transcription, screen context, modes (coding / interview / speech), push-to-talk,
-> and the private overlay all work. Try it and report issues.
->
-> 🪟 **Windows — work in progress.** The shared app and the Windows platform layer
-> (WASAPI loopback, content protection, DPAPI, packaging) are implemented and build,
-> but have **not yet been verified on Windows hardware**. Expect rough edges until it's
-> validated on a real machine.
+<img alt="Apple" src="https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white" align="left" />&nbsp; **Ready to test.** The macOS build works end to end: realtime transcription, screen
+context, modes (coding / interview / speech), push-to-talk, and the private overlay. Try
+it and report issues.
+
+<img alt="Windows" src="https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white" align="left" />&nbsp; **Work in progress.** The shared app and the Windows platform layer are implemented and
+build, but have **not yet been verified on Windows hardware**. Expect rough edges.
 
 ## Which branch do I use?
 
-This `main` branch is just the landing page. The application lives on the branches below.
-Pick the one for your operating system and follow its README.
+This `main` branch is just the landing page. The application lives on the platform
+branches below.
 
 | Platform | Branch | Status | Start here |
 |---|---|---|---|
-| 🍎 macOS | [`mac`](../../tree/mac) | **Ready to test** | [macOS README](../../tree/mac#readme) |
-| 🪟 Windows | [`windows`](../../tree/windows) | **Work in progress** | [Windows README](../../tree/windows#readme) |
-| 🔧 Shared development | [`dev`](../../tree/dev) | contributors only | — |
+| macOS | [`mac`](../../tree/mac) | **Ready to test** | [macOS README](../../tree/mac#readme) |
+| Windows | [`windows`](../../tree/windows) | **Work in progress** | [Windows README](../../tree/windows#readme) |
 
-> **Regular users should not use `dev`.** It contains the shared cross-platform code with
-> no OS-specific implementation and is not meant to be run directly.
+## Get started
 
----
-
-## Setup — macOS
+The fastest path on either platform:
 
 ```bash
 git clone <repository-url>
 cd Clueless-ly
-git checkout mac
-npm install
-cp .env.example .env
-npm run dev
+git checkout mac        # or: git checkout windows
+./launch.sh             # Windows: ./launch.ps1
 ```
 
-Then open `.env` and add your OpenAI API key:
+The launcher installs dependencies, creates your `.env`, and starts the app. You then add
+your OpenAI API key to `.env`.
 
-1. Go to <https://platform.openai.com/api-keys>
-2. Create (or select) a project, then create a new API key.
-3. Copy the key.
-4. Open `.env` and place it after `OPENAI_API_KEY=`:
-   ```env
-   OPENAI_API_KEY=sk-your-key-here
-   ```
-   - **Do not** wrap the value in quotation marks.
-   - **Do not** commit `.env`.
-   - **Do not** share your API key.
+**Full instructions** — dependencies, the OpenAI key, OS permissions, and packaging — are
+in **[setup.md](./setup.md)**.
 
-**Permissions macOS will ask for** (System Settings → Privacy & Security):
-
-- **Microphone** — to transcribe your side of the conversation.
-- **Screen Recording** — required for **system-audio capture** (ScreenCaptureKit) and for **screen context**.
-- **Accessibility** — only if you use global shortcuts that need it.
-
-Run: `npm run dev` · Build a `.dmg`: `npm run build:mac`
-
-Full details, including notarization and troubleshooting, are in the
-[macOS README](../../tree/mac#readme).
-
----
-
-## Setup — Windows
-
-> ⚠️ **Work in progress.** The Windows build compiles and the native layer is
-> implemented, but it has not yet been verified on real Windows hardware. Use it for
-> development/testing, not as a finished app.
-
-```powershell
-git clone <repository-url>
-cd Clueless-ly
-git checkout windows
-npm install
-Copy-Item .env.example .env    # cmd.exe:  copy .env.example .env
-npm run dev
-```
-
-Then open `.env` and add your OpenAI API key (same steps as macOS above):
-
-```env
-OPENAI_API_KEY=sk-your-key-here
-```
-- **Do not** wrap the value in quotation marks.
-- **Do not** commit `.env`.
-- **Do not** share your API key.
-
-**Permissions / prompts on Windows:**
-
-- **Microphone** — Settings → Privacy & security → Microphone (the app links you there if blocked).
-- **System audio** — captured via WASAPI loopback; **no separate permission** needed.
-- **SmartScreen** — an unsigned build shows a warning on first launch → *More info → Run anyway*.
-
-Run: `npm run dev` · Build an installer: `npm run build:win`
-
-Full details are in the [Windows README](../../tree/windows#readme).
-
----
-
-## Environment variables
-
-| Variable | Required | Default | Purpose |
-|---|---|---|---|
-| `OPENAI_API_KEY` | ✅ | — | Auth for all OpenAI calls |
-| `OPENAI_MODEL` | | `gpt-4o` | Answers + screen vision |
-| `OPENAI_TRANSCRIBE_MODEL` | | `gpt-4o-mini-transcribe` | Transcription |
-| `OPENAI_REALTIME_MODEL` | | `gpt-4o-realtime-preview` | Realtime streaming |
-| `CLUELESSLY_LOG_LEVEL` | | `info` | Log verbosity |
-
-If `OPENAI_API_KEY` is missing, the app does not crash — it shows a clear setup banner.
+Contributing? Each platform branch has an **[ARCHITECTURE.md](../../tree/mac/ARCHITECTURE.md)**
+that explains the codebase.
 
 ## Privacy note
 
 The overlay excludes itself from screen capture using the **official OS mechanism**
 (macOS `NSWindowSharingNone`, Windows `WDA_EXCLUDEFROMCAPTURE`). This is not a guarantee
-against every possible capture method, and it requires a recent OS version. See each
-platform README for exact support and limitations. Clueless-ly does **not** tamper with
-capture software, hide processes, or bypass any security controls.
+against every possible capture method, and it requires a recent OS version. Clueless-ly
+does **not** tamper with capture software, hide processes, or bypass any security controls.
 
 ## License
 
-MIT
+[MIT](./LICENSE)
