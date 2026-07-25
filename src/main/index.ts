@@ -8,6 +8,7 @@ import { registerAiIpc, clearAskHistory } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
 import { registerAutoAnswer, setAutoAnswerPaused } from './transcription/auto-answer'
 import { registerContextIpc, contextEngine } from './context/context-engine'
+import { registerContextStoreIpc } from './context/context-store'
 import { screenObserver } from './context/screen-observer'
 import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { settingsService, registerSettingsIpc } from './settings/settings-service'
@@ -77,6 +78,7 @@ async function bootstrap(): Promise<void> {
   registerTranscriptionIpc()
   registerAutoAnswer()
   registerContextIpc()
+  registerContextStoreIpc()
   registerSessionsIpc()
   registerSettingsIpc()
 

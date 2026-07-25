@@ -18,8 +18,12 @@ export const IpcChannels = {
 
   ContextCaptureScreen: 'context:capture-screen',
   ContextGetSnapshot: 'context:get-snapshot',
-  ContextSetDocument: 'context:set-document',
-  ContextGetDocument: 'context:get-document',
+  ContextGetAll: 'context:get-all',
+  ContextSetUser: 'context:set-user',
+  ContextClearUser: 'context:clear-user',
+  ContextSetInterview: 'context:set-interview',
+  ContextClearInterview: 'context:clear-interview',
+  ContextSetSpeech: 'context:set-speech',
   ContextParseFile: 'context:parse-file',
 
   SessionsList: 'sessions:list',

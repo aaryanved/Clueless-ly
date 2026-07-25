@@ -28,10 +28,33 @@ async function parsePptx(buf: Buffer): Promise<string> {
   return out.join('\n\n')
 }
 
+// Text/code file extensions we pull out of a project .zip.
+const ZIP_TEXT_RE = /\.(txt|md|markdown|json|ya?ml|xml|csv|html?|css|scss|js|jsx|ts|tsx|py|java|c|cc|cpp|h|hpp|cs|go|rs|rb|php|swift|kt|sql|sh|toml|ini|env|gradle|dockerfile|makefile)$/i
+const ZIP_SKIP_RE = /(^|\/)(node_modules|\.git|dist|build|out|vendor|\.next|\.venv|__pycache__)\//i
+
+/** Concatenate readable source/text files from a project .zip. */
+async function parseZip(buf: Buffer): Promise<string> {
+  const zip = await JSZip.loadAsync(buf)
+  const paths = Object.keys(zip.files)
+    .filter((p) => !zip.files[p].dir && ZIP_TEXT_RE.test(p) && !ZIP_SKIP_RE.test(p))
+    .sort()
+    .slice(0, 120) // keep the payload bounded
+  const out: string[] = []
+  let total = 0
+  for (const p of paths) {
+    const content = await zip.files[p].async('string')
+    const snippet = content.slice(0, 8000)
+    total += snippet.length
+    out.push(`--- ${p} ---\n${snippet}`)
+    if (total > 400_000) break // overall cap
+  }
+  return out.join('\n\n')
+}
+
 /**
  * Extract text from a user-loaded document. PDFs use pdf-parse, .pptx slides are read
- * from the OOXML zip, and everything else is decoded as UTF-8 text. Returns a best-effort
- * string (empty on failure).
+ * from the OOXML zip, .zip projects yield their source/text files, and everything else is
+ * decoded as UTF-8 text. Returns a best-effort string (empty on failure).
  */
 export async function parseFileToText(name: string, bytes: ArrayBuffer): Promise<string> {
   const buf = Buffer.from(bytes)
@@ -43,6 +66,9 @@ export async function parseFileToText(name: string, bytes: ArrayBuffer): Promise
     }
     if (lower.endsWith('.pptx')) {
       return (await parsePptx(buf)).trim()
+    }
+    if (lower.endsWith('.zip')) {
+      return (await parseZip(buf)).trim()
     }
     return buf.toString('utf8')
   } catch (err) {
