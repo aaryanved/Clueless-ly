@@ -27,7 +27,7 @@ function activeModes(): AppModes {
   try {
     return settingsService.get().modes
   } catch {
-    return { coding: false, interview: false, debate: false, speech: false }
+    return { coding: false, interview: false, chess: false, speech: false }
   }
 }
 
