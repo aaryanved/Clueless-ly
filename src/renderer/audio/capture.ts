@@ -104,7 +104,7 @@ export class CaptureManager {
       let sum = 0
       for (let i = 0; i < input.length; i++) sum += input[i] * input[i]
       const rms = Math.sqrt(sum / input.length)
-      setAudioLevel(Math.min(1, rms * 4))
+      setAudioLevel(role, Math.min(1, rms * 4))
       const pcm = floatToPcm16(input)
       void window.clueless.transcription.pushAudio(role, pcm)
     }

@@ -18,7 +18,7 @@ export function TranscriptPanel(): JSX.Element {
       <div className="transcript-col__head" {...interactiveProps()}>
         <span className="transcript-col__title">
           Live transcript
-          <Soundwave active={state.transcribing} />
+          {state.transcribing && <span className="live-dot" title="Listening" />}
         </span>
         <button className="link-btn" onClick={() => dispatch({ type: 'clearTranscript' })}>
           Clear
@@ -40,7 +40,13 @@ export function TranscriptPanel(): JSX.Element {
             title="Click to ask about this line"
             onClick={() => s.text.trim() && dispatch({ type: 'prefillAsk', text: s.text.trim() })}
           >
-            <span className="seg__who">{s.role === 'me' ? 'You' : s.role === 'them' ? 'Them' : '·'}</span>
+            <span className="seg__who">
+              {s.role === 'me' ? 'You' : s.role === 'them' ? 'Them' : '·'}
+              {/* Live audio wave next to the speaker while their audio is being picked up. */}
+              {!s.isFinal && (s.role === 'me' || s.role === 'them') && (
+                <Soundwave active role={s.role} />
+              )}
+            </span>
             <span className="seg__text">{s.text}</span>
           </button>
         ))}

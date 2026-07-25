@@ -1,21 +1,21 @@
 import { useEffect, useRef } from 'react'
-import { onAudioLevel } from '../audio/level'
+import { onAudioLevel, type LevelRole } from '../audio/level'
 
-// A small live soundwave: a row of bars whose heights react to the input level, so the
-// user can see transcription is actively listening before any text appears.
-const BARS = 5
+// A small live soundwave: a row of bars whose heights react to the input level of a
+// given role, so the user can see audio is being picked up before text appears.
+const BARS = 4
 
-export function Soundwave({ active }: { active: boolean }): JSX.Element {
+export function Soundwave({ active, role }: { active: boolean; role: LevelRole }): JSX.Element {
   const barsRef = useRef<Array<HTMLSpanElement | null>>([])
   const levelRef = useRef(0)
   const rafRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const unsub = onAudioLevel((l) => {
+    const unsub = onAudioLevel(role, (l) => {
       levelRef.current = l
     })
     return unsub
-  }, [])
+  }, [role])
 
   useEffect(() => {
     if (!active) {

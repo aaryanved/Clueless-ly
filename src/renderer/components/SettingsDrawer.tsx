@@ -40,12 +40,6 @@ export function SettingsDrawer({ onClose }: { onClose: () => void }): JSX.Elemen
         </div>
 
         <div className="drawer__body">{tab === 'settings' ? <SettingsPanel /> : <ContextPanel />}</div>
-
-        <div className="drawer__foot">
-          <button className="btn btn--danger" onClick={() => void window.clueless.quit()}>
-            Quit Clueless-ly
-          </button>
-        </div>
       </div>
     </div>
   )
