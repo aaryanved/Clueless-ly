@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SettingsPanel } from './SettingsPanel'
 import { ContextPanel } from './ContextPanel'
-import { enterInteractive, leaveInteractive } from '../interactivity'
+import { enterInteractive, leaveInteractive, interactiveProps } from '../interactivity'
 
 /**
  * Slide-in drawer opened from the top-right gear icon. Holds settings, the session
@@ -17,7 +17,7 @@ export function SettingsDrawer({ onClose }: { onClose: () => void }): JSX.Elemen
   }, [])
 
   return (
-    <div className="drawer-scrim" onClick={onClose}>
+    <div className="drawer-scrim" onClick={onClose} {...interactiveProps()}>
       <div className="drawer" onClick={(e) => e.stopPropagation()}>
         <div className="drawer__head">
           <div className="drawer__switch">

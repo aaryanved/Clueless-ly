@@ -55,7 +55,11 @@ export class RealtimeTranscriptionSession {
           audio: {
             input: {
               format: { type: 'audio/pcm', rate: 24000 },
-              transcription: { model: getConfig().transcribeModel },
+              transcription: {
+                model: getConfig().transcribeModel,
+                // Bias the recognizer toward English and Hindi only.
+                prompt: 'Transcribe only English and Hindi speech. Ignore other languages.'
+              },
               turn_detection: {
                 type: 'server_vad',
                 threshold: 0.5,

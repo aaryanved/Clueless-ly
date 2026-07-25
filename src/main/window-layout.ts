@@ -3,7 +3,7 @@ import type { WindowLayout } from '@shared/types'
 
 // Window sizing/positioning for the three layouts plus the minimized "notch" pill.
 
-const PILL = { width: 148, height: 30 }
+const PILL = { width: 118, height: 28 }
 let savedBounds: Rectangle | null = null
 
 export function computeLayoutBounds(layout: WindowLayout): Rectangle {

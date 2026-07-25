@@ -364,8 +364,21 @@ textarea {
 .seg {
   display: flex;
   gap: 8px;
-  user-select: text;
   line-height: 1.4;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.seg:hover {
+  background: var(--panel-2);
 }
 .seg[data-final='false'] {
   opacity: 0.55;
@@ -375,9 +388,33 @@ textarea {
   min-width: 34px;
   font-size: 11px;
   padding-top: 1px;
+  flex: none;
+}
+.seg__text {
+  flex: 1;
 }
 .seg--them .seg__text {
   color: var(--accent);
+}
+
+/* ---- Soundwave (listening indicator) ---- */
+.wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+  margin-left: 8px;
+}
+.wave__bar {
+  width: 2px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--muted);
+  transform: scaleY(0.18);
+  transform-origin: center;
+}
+.wave[data-active='yes'] .wave__bar {
+  background: var(--danger);
 }
 
 .slider {
@@ -404,30 +441,38 @@ textarea {
 .drawer-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.32);
   display: flex;
   justify-content: flex-end;
   border-radius: var(--radius);
   overflow: hidden;
+  animation: scrim-in 0.24s ease;
+}
+@keyframes scrim-in {
+  from {
+    background: rgba(0, 0, 0, 0);
+  }
+  to {
+    background: rgba(0, 0, 0, 0.32);
+  }
 }
 .drawer {
   width: 400px;
   max-width: 88%;
   height: 100%;
   background: var(--surface);
-  border-left: 1px solid var(--border);
+  border-left: 0.5px solid var(--border);
   display: flex;
   flex-direction: column;
-  animation: slide-in 0.16s ease-out;
+  /* iOS-like ease: quick out, gentle settle, no overshoot. */
+  animation: slide-in 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 @keyframes slide-in {
   from {
-    transform: translateX(24px);
-    opacity: 0.4;
+    transform: translateX(100%);
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 .drawer__head {
