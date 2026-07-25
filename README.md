@@ -15,14 +15,24 @@ platform implementation.
 
 ## Quick start
 
+Easiest path — the launcher installs dependencies, creates your `.env`, and starts the app:
+
 ```bash
 git clone <repository-url>
 cd Clueless-ly
 git checkout mac
+./launch.sh
+```
+
+Or do it manually:
+
+```bash
 npm install
-cp .env.example .env      # then edit .env — see below
+cp .env.example .env      # then edit .env, see below
 npm run dev
 ```
+
+New to the codebase? See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 > This repository's npm blocks package install scripts by default. If Electron/esbuild
 > did not finish installing, approve them once and reinstall:

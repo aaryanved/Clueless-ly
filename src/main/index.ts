@@ -1,3 +1,11 @@
+// Electron main-process entry point.
+//
+// This is the app's wiring hub. `bootstrap()` runs once the Electron app is ready and
+// sets things up in a deliberate order: resolve the OS platform adapter, load config +
+// settings, register every IPC handler (each feature module exposes a `register*Ipc()`),
+// then create the always-on-top overlay window and its behaviours (content protection,
+// click-through, global shortcuts, tray). Feature logic lives in the modules imported
+// below; this file only orchestrates them. See ARCHITECTURE.md for the big picture.
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { createLogger } from './logging'
 import { resolvePlatform } from './platform'
