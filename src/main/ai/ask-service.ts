@@ -4,11 +4,13 @@ import { IpcChannels } from '@shared/ipc'
 import type { AiAskRequest } from '@shared/types'
 import { createLogger } from '../logging'
 import { events } from '../events'
+import { settingsService } from '../settings/settings-service'
+import type { AppModes } from '@shared/types'
 import { streamChat, streamWebSearch, type ChatMessage } from './openai-client'
 
 const log = createLogger('ai:ask')
 
-const SYSTEM_PROMPT =
+const BASE_PROMPT =
   'You are Clueless-ly, a discreet real-time on-screen assistant. Treat everything the ' +
   'user says or types - questions, requests, and instructions (for example "give me the ' +
   'code for a for loop in Java") - as a task to carry out directly and concisely. When a ' +
@@ -17,6 +19,58 @@ const SYSTEM_PROMPT =
   'follow-ups like "the same" or "it". Format answers in Markdown: use **bold** for key ' +
   'points and fenced code blocks with a language tag for any code. If information is ' +
   'insufficient, say what you would need rather than inventing details.'
+
+function activeModes(): AppModes {
+  try {
+    return settingsService.get().modes
+  } catch {
+    return { coding: false, interview: false, debate: false, speech: false }
+  }
+}
+
+/** Compose the system prompt from the base plus any active modes. */
+function buildSystemPrompt(): string {
+  const m = activeModes()
+  const parts = [BASE_PROMPT]
+
+  if (m.coding && m.interview) {
+    // Technical interview: code + a spoken walkthrough.
+    parts.push(
+      'TECHNICAL INTERVIEW MODE. The user is in a live technical interview and needs to ' +
+        'both write code and narrate it. Respond in exactly two parts: (1) a single fenced ' +
+        'code block with the complete, correct, idiomatic solution; then (2) under a ' +
+        '"**Walkthrough**" heading, a first-person script of what to SAY while writing that ' +
+        'code, step by step ("First I\'ll set up two pointers...", "Now I handle the edge ' +
+        'case where..."), as if explaining to an interviewer. Keep the narration natural and ' +
+        'speakable, mapping to the code in order.'
+    )
+  } else if (m.coding) {
+    parts.push(
+      'CODING MODE. Prioritise a correct, complete, efficient and idiomatic solution. Give ' +
+        'the full code in a fenced block with the right language tag, then a brief note on ' +
+        'complexity and key edge cases. Favour working code over prose.'
+    )
+  } else if (m.interview) {
+    parts.push(
+      'INTERVIEW MODE. Help the user answer interview questions using the provided reference ' +
+        'material and context. Produce a comprehensive, well-structured, first-person answer ' +
+        'the user can read ALOUD verbatim without having to think further. Be specific and ' +
+        'confident; prefer concrete examples grounded in the reference material.'
+    )
+  }
+
+  if (m.speech) {
+    parts.push(
+      'SPEECH Q&A MODE. The user has just given a presentation whose content is provided as ' +
+        'reference material. Answer audience questions strictly in line with what was ' +
+        'presented, in a confident first-person voice the user can read aloud. Do not ' +
+        'contradict the presentation; if a question is outside its scope, answer briefly and ' +
+        'say it goes beyond what was presented.'
+    )
+  }
+
+  return parts.join('\n\n')
+}
 
 /**
  * Grounding context for a request: transcript text plus, optionally, a screenshot of
@@ -84,11 +138,12 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
     const context = await contextProvider(req).catch(() => ({ text: '' }) as AskContext)
 
     const reference = referenceText.trim()
+    const systemPrompt = buildSystemPrompt()
 
     if (wantsWebSearch(req.question)) {
       // Web-search path (text only): fold in reference material, history + context.
       const prompt =
-        `${SYSTEM_PROMPT}\n\n` +
+        `${systemPrompt}\n\n` +
         (reference ? `Reference material from the user:\n${reference}\n\n` : '') +
         `${historyText()}` +
         (context.text.trim() ? `On-screen conversation:\n${context.text}\n\n` : '') +
@@ -98,7 +153,7 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
         events.aiToken({ requestId, token })
       }
     } else {
-      const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }]
+      const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }]
       if (reference) {
         messages.push({ role: 'system', content: `Reference material from the user:\n${reference}` })
       }

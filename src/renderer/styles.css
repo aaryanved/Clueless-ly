@@ -840,3 +840,128 @@ textarea {
 .seg__who .wave__bar {
   height: 10px;
 }
+
+/* ---- Modes panel ---- */
+.mode-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--border);
+  cursor: pointer;
+}
+.mode-row:first-of-type {
+  border-top: none;
+}
+.mode-row--off {
+  opacity: 0.5;
+  cursor: default;
+}
+.mode-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mode-row__label {
+  font-weight: 600;
+}
+.mode-row__desc {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+.mode-row input {
+  margin-top: 3px;
+  flex: none;
+}
+.mode-hint {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--accent-2);
+}
+.icon-btn--on {
+  background: var(--panel-2);
+  color: var(--fg);
+}
+
+/* ---- Technical-interview code pane (left) ---- */
+.workspace__code {
+  width: 46%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+}
+.codepane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.codepane__head {
+  padding: 12px 14px 8px;
+}
+.codepane__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 14px 14px;
+  user-select: text;
+}
+
+/* ---- Speech mode ---- */
+.speech-setup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.speech-setup__inner {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.speech-setup__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.speech-input {
+  min-height: 220px;
+  resize: vertical;
+  background: var(--panel);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 1.55;
+  user-select: text;
+}
+.speech-input:focus {
+  border-color: var(--accent);
+}
+.speech-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.speech-actions__go {
+  margin-left: auto;
+}
+.speech-qa {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.speech-qa__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
