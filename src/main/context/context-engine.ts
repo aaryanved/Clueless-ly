@@ -4,6 +4,7 @@ import type { AiAskRequest, ContextSnapshot, TranscriptSegment } from '@shared/t
 import { orchestrator } from '../transcription/orchestrator'
 import { screenObserver } from './screen-observer'
 import { getPlatform } from '../platform'
+import { settingsService } from '../settings/settings-service'
 import { parseFileToText } from './file-parse'
 import {
   setAskContextProvider,
@@ -54,7 +55,14 @@ export class ContextEngine {
   async gather(req: AiAskRequest): Promise<AskContext> {
     const text = req.useTranscriptContext ? this.buildTranscriptText() : ''
     let imageDataUrl: string | undefined
-    if (req.useScreenContext) {
+    // Screen capture requires both the per-request flag and the global setting.
+    let screenSettingOn = true
+    try {
+      screenSettingOn = settingsService.get().captureScreenContext
+    } catch {
+      /* settings not ready yet */
+    }
+    if (req.useScreenContext && screenSettingOn) {
       const frame = await getPlatform().screen.captureFrame().catch(() => null)
       if (frame) imageDataUrl = frame.dataUrl
     }
