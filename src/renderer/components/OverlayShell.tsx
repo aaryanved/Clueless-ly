@@ -6,7 +6,6 @@ import { applyAppearance } from '../appearance'
 import { AssistantPanel } from './AssistantPanel'
 import { TranscriptPanel } from './TranscriptPanel'
 import { SettingsDrawer } from './SettingsDrawer'
-import { SpeechView } from './SpeechView'
 import { CodePane } from './CodePane'
 
 export function OverlayShell(): JSX.Element {
@@ -114,33 +113,27 @@ export function OverlayShell(): JSX.Element {
       )}
 
       <div className="workspace">
-        {speech ? (
-          <section className="workspace__main">
-            <SpeechView />
-          </section>
-        ) : (
-          <>
-            {technical && (
-              <aside className="workspace__code">
-                <CodePane />
-              </aside>
-            )}
-            <section className="workspace__main">
-              <AssistantPanel
-                narrationOnly={technical}
-                placeholder={
-                  technical
-                    ? 'Ask for a solution — code goes left, walkthrough here…'
-                    : undefined
-                }
-              />
-            </section>
-            {transcriptVisible && (
-              <aside className="workspace__side">
-                <TranscriptPanel />
-              </aside>
-            )}
-          </>
+        {technical && (
+          <aside className="workspace__code">
+            <CodePane />
+          </aside>
+        )}
+        <section className="workspace__main">
+          <AssistantPanel
+            narrationOnly={technical}
+            placeholder={
+              technical
+                ? 'Ask for a solution — code goes left, walkthrough here…'
+                : speech
+                  ? 'Type or speak an audience question — answered from your speech…'
+                  : undefined
+            }
+          />
+        </section>
+        {transcriptVisible && (
+          <aside className="workspace__side">
+            <TranscriptPanel />
+          </aside>
         )}
       </div>
 

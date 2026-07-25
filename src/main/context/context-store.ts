@@ -93,9 +93,14 @@ export function registerContextStoreIpc(): void {
     await persist()
   })
 
-  ipcMain.handle(IpcChannels.ContextSetSpeech, async (_e, text: string) => {
+  ipcMain.handle(IpcChannels.ContextSetSpeech, async (_e, text: string, saved: boolean) => {
     await load()
-    data.speech = { text: text ?? '' }
+    data.speech = { text: text ?? '', savedAt: saved ? Date.now() : undefined }
+    await persist()
+  })
+  ipcMain.handle(IpcChannels.ContextClearSpeech, async () => {
+    await load()
+    data.speech = { text: '' }
     await persist()
   })
 

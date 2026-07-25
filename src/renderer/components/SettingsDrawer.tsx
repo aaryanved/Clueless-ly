@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { SettingsPanel } from './SettingsPanel'
 import { UserContextPanel } from './UserContextPanel'
 import { InterviewContextPanel } from './InterviewContextPanel'
+import { SpeechContextPanel } from './SpeechContextPanel'
 import { ModesPanel } from './ModesPanel'
 import { enterInteractive, leaveInteractive, interactiveProps } from '../interactivity'
 import type { AppModes } from '@shared/types'
@@ -15,7 +16,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'settings', label: 'Settings' }
 ]
 
-const CTX_TITLE: Record<string, string> = { interview: 'Interview Context' }
+const CTX_TITLE: Record<string, string> = { interview: 'Interview Context', speech: 'Speech Context' }
 
 /**
  * Slide-in drawer. Top-level tabs: Modes, User Context, Settings. A mode's chevron drills
@@ -57,6 +58,7 @@ export function SettingsDrawer({ onClose }: { onClose: () => void }): JSX.Elemen
 
         <div className="drawer__body">
           {view.kind === 'ctx' && view.mode === 'interview' && <InterviewContextPanel />}
+          {view.kind === 'ctx' && view.mode === 'speech' && <SpeechContextPanel />}
           {view.kind === 'tab' && view.tab === 'modes' && (
             <ModesPanel onOpenContext={(mode) => setView({ kind: 'ctx', mode })} />
           )}
