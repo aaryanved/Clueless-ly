@@ -4,10 +4,9 @@ The Windows build of Clueless-ly — a private, always-on-top AI assistant overl
 realtime transcription (microphone + system audio), on-demand screen context, and an
 overlay excluded from ordinary screen sharing.
 
-This branch = the shared core from [`dev`](../../tree/dev) **plus** the Windows platform
-implementation.
+This branch = the shared app **plus** the Windows platform implementation.
 
-> ### ⚠️ Verification status
+> ### Verification status
 > This branch was implemented and type-checked/built on macOS. The Windows-specific
 > code paths (WASAPI loopback capture, `WDA_EXCLUDEFROMCAPTURE` content protection,
 > DPAPI secure storage, NSIS packaging) use documented Windows/Electron APIs but have
@@ -23,12 +22,20 @@ implementation.
 
 ## Quick start
 
+Easiest path — the launcher installs dependencies, creates your `.env`, and starts the app:
+
 ```powershell
 git clone <repository-url>
 cd Clueless-ly
 git checkout windows
+./launch.ps1
+```
+
+Or do it manually:
+
+```powershell
 npm install
-Copy-Item .env.example .env    # then edit .env — see below
+Copy-Item .env.example .env    # then edit .env, see below
 npm run dev
 ```
 
@@ -37,6 +44,8 @@ Command Prompt (cmd.exe) equivalent for the copy step:
 ```bat
 copy .env.example .env
 ```
+
+New to the codebase? See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 > This repository's npm blocks package install scripts by default. If Electron/esbuild
 > did not finish installing, approve them once and reinstall:
