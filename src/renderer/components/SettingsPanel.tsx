@@ -1,5 +1,6 @@
 import { useStore } from '../state/store'
 import type { AppSettings } from '@shared/types'
+import { KeybindInput } from './KeybindInput'
 
 export function SettingsPanel(): JSX.Element {
   const { state, dispatch } = useStore()
@@ -94,6 +95,26 @@ export function SettingsPanel(): JSX.Element {
 
       <section className="group">
         <h3>Capture</h3>
+        <Toggle
+          label="Push-to-talk mic"
+          checked={!!settings?.pushToTalk}
+          onChange={(v) => patch({ pushToTalk: v })}
+        />
+        <p className="muted small">
+          When on, only device audio is transcribed and your mic turns on only while the
+          talk key is active — keeping your voice apart from device audio.
+        </p>
+        {settings?.pushToTalk && (
+          <div className="row">
+            <span>Talk key</span>
+            <KeybindInput
+              value={settings?.shortcuts?.talk ?? 'CommandOrControl+Shift+M'}
+              onChange={(accel) =>
+                patch({ shortcuts: { ...(settings?.shortcuts ?? {}), talk: accel } })
+              }
+            />
+          </div>
+        )}
         <Toggle
           label="Microphone"
           checked={!!settings?.microphoneEnabled}

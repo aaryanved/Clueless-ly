@@ -5,6 +5,7 @@ export const IpcChannels = {
   // Renderer -> Main (invoke/handle)
   AppGetStatus: 'app:get-status',
   AppQuit: 'app:quit',
+  TalkToggle: 'talk:toggle',
   ConfigGet: 'config:get',
   ConfigValidate: 'config:validate',
 
@@ -53,7 +54,8 @@ export const IpcChannels = {
   EvtAiDone: 'evt:ai-done',
   EvtStatus: 'evt:status',
   EvtError: 'evt:error',
-  EvtShortcut: 'evt:shortcut'
+  EvtShortcut: 'evt:shortcut',
+  EvtTalk: 'evt:talk'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

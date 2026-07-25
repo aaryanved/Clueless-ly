@@ -12,7 +12,7 @@ import { screenObserver } from './context/screen-observer'
 import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { settingsService, registerSettingsIpc } from './settings/settings-service'
 import { defaultSettings } from './settings/defaults'
-import { setupShortcuts } from './shortcuts'
+import { setupShortcuts, toggleTalk } from './shortcuts'
 import { applyLayout, minimizeToPill, restoreFromPill } from './window-layout'
 import { setupDisplayMediaHandler } from './capture-grant'
 import { createTray } from './tray'
@@ -62,6 +62,7 @@ async function bootstrap(): Promise<void> {
   ipcMain.handle(IpcChannels.PlatformAudioSources, async () => platform.screen.listSources())
 
   ipcMain.handle(IpcChannels.AppQuit, async () => app.quit())
+  ipcMain.handle(IpcChannels.TalkToggle, async () => toggleTalk())
 
   // Start a fresh conversation: clear the live transcript buffer and screen context,
   // and begin a new session. (Saved-session history is handled separately.)

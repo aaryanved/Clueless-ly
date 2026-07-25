@@ -20,6 +20,7 @@ export function defaultSettings(platform: PlatformAdapter): AppSettings {
     overlayOpacity: 0.52,
     maxContextTokens: 2000,
     modes: { coding: false, interview: false, debate: false, speech: false },
-    shortcuts: platform.shortcuts.defaults()
+    pushToTalk: true,
+    shortcuts: { ...platform.shortcuts.defaults(), talk: 'CommandOrControl+Shift+M' }
   }
 }

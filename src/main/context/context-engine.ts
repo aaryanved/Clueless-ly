@@ -55,14 +55,23 @@ export class ContextEngine {
   async gather(req: AiAskRequest): Promise<AskContext> {
     const text = req.useTranscriptContext ? this.buildTranscriptText() : ''
     let imageDataUrl: string | undefined
-    // Screen capture requires both the per-request flag and the global setting.
+    // Screen capture requires the per-request flag and the global setting, and is
+    // suppressed in pure interview / speech modes: those answer from transcript +
+    // reference material, and a screenshot of the other person's face makes the model
+    // refuse ("I can't identify people in images"). Coding / technical interview keep
+    // the screen because the problem is on it.
     let screenSettingOn = true
+    let modeAllowsScreen = true
     try {
-      screenSettingOn = settingsService.get().captureScreenContext
+      const s = settingsService.get()
+      screenSettingOn = s.captureScreenContext
+      const m = s.modes
+      if (m.speech) modeAllowsScreen = false
+      if (m.interview && !m.coding) modeAllowsScreen = false
     } catch {
       /* settings not ready yet */
     }
-    if (req.useScreenContext && screenSettingOn) {
+    if (req.useScreenContext && screenSettingOn && modeAllowsScreen) {
       const frame = await getPlatform().screen.captureFrame().catch(() => null)
       if (frame) imageDataUrl = frame.dataUrl
     }

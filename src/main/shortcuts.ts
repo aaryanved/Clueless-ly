@@ -13,6 +13,17 @@ const log = createLogger('shortcuts')
  * is not focused.
  */
 let clickThrough = false
+let talkActive = false
+
+/** Toggle microphone capture ("your voice"); shared by the hotkey and the UI button. */
+export function toggleTalk(): boolean {
+  talkActive = !talkActive
+  events.talk({ active: talkActive })
+  return talkActive
+}
+export function getTalkActive(): boolean {
+  return talkActive
+}
 
 export function setupShortcuts(
   platform: PlatformAdapter,
@@ -22,6 +33,11 @@ export function setupShortcuts(
   platform.shortcuts.unregisterAll()
 
   const actions: Record<string, () => void> = {
+    talk: () => {
+      // Toggle microphone capture ("your voice"). Default off so only device audio is
+      // transcribed; this is how we separate the user's input from device audio.
+      toggleTalk()
+    },
     toggleOverlay: () => {
       if (overlay.isVisible()) overlay.hide()
       else {

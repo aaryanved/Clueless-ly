@@ -118,6 +118,10 @@ export interface AppSettings {
   overlayOpacity: number
   maxContextTokens: number
   modes: AppModes
+  // When true, the microphone is off by default (only device/system audio is
+  // transcribed) and the "talk" hotkey toggles the mic on so your own voice is
+  // captured only when you intend it. This separates your input from device audio.
+  pushToTalk: boolean
   shortcuts: Record<string, string>
 }
 
@@ -164,4 +168,7 @@ export interface ErrorEvent {
 }
 export interface ShortcutEvent {
   action: string
+}
+export interface TalkEvent {
+  active: boolean
 }

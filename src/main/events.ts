@@ -7,6 +7,7 @@ import type {
   ErrorEvent,
   ShortcutEvent,
   StatusEvent,
+  TalkEvent,
   TranscriptEvent
 } from '@shared/types'
 
@@ -30,5 +31,6 @@ export const events = {
   aiDone: (e: AiDoneEvent) => send(IpcChannels.EvtAiDone, e),
   status: (e: StatusEvent) => send(IpcChannels.EvtStatus, e),
   error: (e: ErrorEvent) => send(IpcChannels.EvtError, e),
-  shortcut: (e: ShortcutEvent) => send(IpcChannels.EvtShortcut, e)
+  shortcut: (e: ShortcutEvent) => send(IpcChannels.EvtShortcut, e),
+  talk: (e: TalkEvent) => send(IpcChannels.EvtTalk, e)
 }

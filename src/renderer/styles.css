@@ -965,3 +965,26 @@ textarea {
   justify-content: space-between;
   padding: 12px 16px 8px;
 }
+
+/* ---- Push-to-talk ---- */
+.icon-btn--talk-on {
+  background: rgba(255, 107, 107, 0.16);
+  color: var(--danger);
+}
+.keybind {
+  -webkit-app-region: no-drag;
+  background: var(--panel-2);
+  border: 0.5px solid var(--border);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 120px;
+  text-align: center;
+}
+.keybind--capturing {
+  border-color: var(--accent);
+  color: var(--accent);
+}
