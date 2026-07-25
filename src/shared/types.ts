@@ -95,6 +95,15 @@ export interface SessionSummary {
 export type ThemeMode = 'dark' | 'light'
 export type WindowLayout = 'center' | 'left' | 'right'
 
+// Assistant modes. They combine: coding + interview = technical interview.
+// (debate is listed but intentionally not implemented.)
+export interface AppModes {
+  coding: boolean
+  interview: boolean
+  debate: boolean
+  speech: boolean
+}
+
 export interface AppSettings {
   model: string
   transcriptionModel: string
@@ -108,6 +117,7 @@ export interface AppSettings {
   windowLayout: WindowLayout
   overlayOpacity: number
   maxContextTokens: number
+  modes: AppModes
   shortcuts: Record<string, string>
 }
 

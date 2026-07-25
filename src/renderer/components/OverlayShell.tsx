@@ -6,13 +6,25 @@ import { applyAppearance } from '../appearance'
 import { AssistantPanel } from './AssistantPanel'
 import { TranscriptPanel } from './TranscriptPanel'
 import { SettingsDrawer } from './SettingsDrawer'
+import { SpeechView } from './SpeechView'
+import { CodePane } from './CodePane'
 
 export function OverlayShell(): JSX.Element {
   const { state, dispatch } = useStore()
   const { start } = useListening()
   const [showSettings, setShowSettings] = useState(false)
   const [minimized, setMinimized] = useState(false)
+  const [showTranscript, setShowTranscript] = useState(false)
   const autoStarted = useRef(false)
+
+  const modes = state.settings?.modes
+  const technical = !!modes?.coding && !!modes?.interview
+  const speech = !!modes?.speech
+  const coding = !!modes?.coding
+  // The transcript panel is hidden by default in coding / technical / speech modes and
+  // revealed via the header toggle. In normal mode it is always shown.
+  const transcriptHidden = coding || technical || speech
+  const transcriptVisible = !transcriptHidden || showTranscript
 
   // Listening turns on automatically once settings have loaded; no button required.
   useEffect(() => {
@@ -64,10 +76,19 @@ export function OverlayShell(): JSX.Element {
         </button>
 
         <div className="topbar__zone topbar__zone--right">
+          {transcriptHidden && (
+            <button
+              className={showTranscript ? 'icon-btn icon-btn--on' : 'icon-btn'}
+              title={showTranscript ? 'Hide transcript' : 'Show transcript'}
+              onClick={() => setShowTranscript((v) => !v)}
+            >
+              <TranscriptIcon />
+            </button>
+          )}
           <button className="icon-btn" title="New conversation" onClick={() => void newConversation()}>
             <PlusIcon />
           </button>
-          <button className="icon-btn" title="Settings & context" onClick={() => setShowSettings(true)}>
+          <button className="icon-btn" title="Modes, context & settings" onClick={() => setShowSettings(true)}>
             <GearIcon />
           </button>
         </div>
@@ -84,12 +105,34 @@ export function OverlayShell(): JSX.Element {
       )}
 
       <div className="workspace">
-        <section className="workspace__main">
-          <AssistantPanel />
-        </section>
-        <aside className="workspace__side">
-          <TranscriptPanel />
-        </aside>
+        {speech ? (
+          <section className="workspace__main">
+            <SpeechView />
+          </section>
+        ) : (
+          <>
+            {technical && (
+              <aside className="workspace__code">
+                <CodePane />
+              </aside>
+            )}
+            <section className="workspace__main">
+              <AssistantPanel
+                narrationOnly={technical}
+                placeholder={
+                  technical
+                    ? 'Ask for a solution — code goes left, walkthrough here…'
+                    : undefined
+                }
+              />
+            </section>
+            {transcriptVisible && (
+              <aside className="workspace__side">
+                <TranscriptPanel />
+              </aside>
+            )}
+          </>
+        )}
       </div>
 
       {showSettings && <SettingsDrawer onClose={() => setShowSettings(false)} />}
@@ -123,6 +166,14 @@ function CloseIcon(): JSX.Element {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
       <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}
+
+function TranscriptIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+      <path d="M4 7h16M4 12h10M4 17h13" />
     </svg>
   )
 }

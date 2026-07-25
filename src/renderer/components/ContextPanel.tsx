@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 // Lets the user paste text or load a text-based document that grounds answers for the
 // session (included as reference material in every question until cleared).
 const FILE_ACCEPT =
-  '.pdf,.txt,.md,.markdown,.json,.csv,.log,.js,.ts,.tsx,.jsx,.py,.java,.c,.cpp,.cs,.go,.rs,.rb,.php,.html,.css,.yml,.yaml,.xml'
+  '.pdf,.pptx,.txt,.md,.markdown,.json,.csv,.log,.js,.ts,.tsx,.jsx,.py,.java,.c,.cpp,.cs,.go,.rs,.rb,.php,.html,.css,.yml,.yaml,.xml'
 
 export function ContextPanel(): JSX.Element {
   const [text, setText] = useState('')
@@ -45,8 +45,8 @@ export function ContextPanel(): JSX.Element {
       <section className="group">
         <h3>Session context</h3>
         <p className="muted small">
-          Paste text or load a document (PDF or text files). The assistant uses it as
-          reference for every answer until you clear it.
+          Paste text or load a document (PDF, PowerPoint, or text files). The assistant
+          uses it as reference for every answer until you clear it.
         </p>
         <textarea
           className="context-input"

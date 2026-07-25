@@ -23,7 +23,12 @@ export class SettingsService {
 
   async init(defaults: AppSettings): Promise<void> {
     const saved = await this.storage.readJson<Partial<AppSettings>>(KEY)
-    this.current = { ...defaults, ...(saved ?? {}), shortcuts: { ...defaults.shortcuts, ...(saved?.shortcuts ?? {}) } }
+    this.current = {
+      ...defaults,
+      ...(saved ?? {}),
+      modes: { ...defaults.modes, ...(saved?.modes ?? {}) },
+      shortcuts: { ...defaults.shortcuts, ...(saved?.shortcuts ?? {}) }
+    }
     log.info('settings loaded')
   }
 
@@ -40,6 +45,7 @@ export class SettingsService {
     const next: AppSettings = {
       ...this.get(),
       ...patch,
+      modes: { ...this.get().modes, ...(patch.modes ?? {}) },
       shortcuts: { ...this.get().shortcuts, ...(patch.shortcuts ?? {}) }
     }
     this.current = next

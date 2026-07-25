@@ -2,8 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { interactiveProps } from '../interactivity'
 import { Markdown } from './Markdown'
+import { stripCodeBlocks } from './markdown-utils'
 
-export function AssistantPanel(): JSX.Element {
+/**
+ * The ask + answers column. `narrationOnly` strips fenced code from the rendered answer
+ * (technical-interview mode shows the code separately in the CodePane); `placeholder`
+ * customises the input hint.
+ */
+export function AssistantPanel({
+  narrationOnly = false,
+  placeholder = 'Ask anything…  (Enter to send, Shift+Enter for a new line)'
+}: {
+  narrationOnly?: boolean
+  placeholder?: string
+} = {}): JSX.Element {
   const { state, dispatch } = useStore()
   const [question, setQuestion] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
@@ -48,15 +60,18 @@ export function AssistantPanel(): JSX.Element {
             questions heard in the conversation are answered automatically.
           </p>
         )}
-        {state.messages.map((m) => (
-          <div key={m.id} className="msg">
-            <div className="msg__q">{m.question}</div>
-            <div className="msg__a">
-              {m.answer ? <Markdown text={m.answer} /> : m.streaming ? <span className="muted">…</span> : null}
-              {m.streaming && <span className="cursor">▍</span>}
+        {state.messages.map((m) => {
+          const shown = narrationOnly ? stripCodeBlocks(m.answer) : m.answer
+          return (
+            <div key={m.id} className="msg">
+              <div className="msg__q">{m.question}</div>
+              <div className="msg__a">
+                {shown ? <Markdown text={shown} /> : m.streaming ? <span className="muted">…</span> : null}
+                {m.streaming && <span className="cursor">▍</span>}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         <div ref={endRef} />
       </div>
 
@@ -65,7 +80,7 @@ export function AssistantPanel(): JSX.Element {
           <textarea
             ref={inputRef}
             className="ask__input"
-            placeholder="Ask anything…  (Enter to send, Shift+Enter for a new line)"
+            placeholder={placeholder}
             value={question}
             rows={1}
             onChange={(e) => setQuestion(e.target.value)}
