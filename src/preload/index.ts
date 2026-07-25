@@ -78,6 +78,8 @@ const api = {
       ipcRenderer.invoke(IpcChannels.OverlayToggleClickThrough, enabled),
     setInteractive: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.OverlaySetInteractive, enabled),
+    setMinimized: (minimized: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.OverlaySetMinimized, minimized),
     setContentProtection: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.OverlaySetContentProtection, enabled),
     hide: (): Promise<void> => ipcRenderer.invoke(IpcChannels.OverlayHide),

@@ -93,6 +93,7 @@ export interface SessionSummary {
 }
 
 export type ThemeMode = 'dark' | 'light'
+export type WindowLayout = 'center' | 'left' | 'right'
 
 export interface AppSettings {
   model: string
@@ -104,6 +105,7 @@ export interface AppSettings {
   contentProtectionEnabled: boolean
   clickThroughEnabled: boolean
   theme: ThemeMode
+  windowLayout: WindowLayout
   overlayOpacity: number
   maxContextTokens: number
   shortcuts: Record<string, string>

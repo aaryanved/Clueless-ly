@@ -16,6 +16,7 @@ export function defaultSettings(platform: PlatformAdapter): AppSettings {
     contentProtectionEnabled: platform.window.supportsContentProtection(),
     clickThroughEnabled: true,
     theme: 'dark',
+    windowLayout: 'center',
     overlayOpacity: 0.52,
     maxContextTokens: 2000,
     shortcuts: platform.shortcuts.defaults()
