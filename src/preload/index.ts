@@ -52,8 +52,9 @@ const api = {
     setInterview: (patch: Partial<InterviewContext>, saved: boolean): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.ContextSetInterview, patch, saved),
     clearInterview: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ContextClearInterview),
-    setSpeech: (text: string): Promise<void> =>
-      ipcRenderer.invoke(IpcChannels.ContextSetSpeech, text),
+    setSpeech: (text: string, saved: boolean): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.ContextSetSpeech, text, saved),
+    clearSpeech: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ContextClearSpeech),
     parseFile: (name: string, bytes: ArrayBuffer): Promise<string> =>
       ipcRenderer.invoke(IpcChannels.ContextParseFile, name, bytes)
   },

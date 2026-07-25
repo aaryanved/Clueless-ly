@@ -80,6 +80,7 @@ export interface InterviewContext {
 }
 export interface SpeechContext {
   text: string
+  savedAt?: number
 }
 export interface ContextData {
   user: UserContext
