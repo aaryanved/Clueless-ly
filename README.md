@@ -11,21 +11,32 @@
 
 Clueless-ly is a small overlay that sits above your other windows. It can listen to a
 conversation (your **microphone** and your computer's **system audio**), look at your
-**screen** when you ask, and answer questions in context — all in a window that the
+**screen** when you ask, and answer questions in context, all in a window that the
 operating system keeps **out of ordinary screen recordings and shares**.
 
 It uses the **OpenAI API** for transcription and answers. You bring your own API key.
+
+## Project status
+
+> 🍎 **macOS — ready to test.** The macOS build is functional end to end: realtime
+> transcription, screen context, modes (coding / interview / speech), push-to-talk,
+> and the private overlay all work. Try it and report issues.
+>
+> 🪟 **Windows — work in progress.** The shared app and the Windows platform layer
+> (WASAPI loopback, content protection, DPAPI, packaging) are implemented and build,
+> but have **not yet been verified on Windows hardware**. Expect rough edges until it's
+> validated on a real machine.
 
 ## Which branch do I use?
 
 This `main` branch is just the landing page. The application lives on the branches below.
 Pick the one for your operating system and follow its README.
 
-| Platform | Branch | Start here |
-|---|---|---|
-| 🍎 macOS | [`mac`](../../tree/mac) | [macOS README](../../tree/mac#readme) |
-| 🪟 Windows | [`windows`](../../tree/windows) | [Windows README](../../tree/windows#readme) |
-| 🔧 Shared development | [`dev`](../../tree/dev) | contributors only |
+| Platform | Branch | Status | Start here |
+|---|---|---|---|
+| 🍎 macOS | [`mac`](../../tree/mac) | **Ready to test** | [macOS README](../../tree/mac#readme) |
+| 🪟 Windows | [`windows`](../../tree/windows) | **Work in progress** | [Windows README](../../tree/windows#readme) |
+| 🔧 Shared development | [`dev`](../../tree/dev) | contributors only | — |
 
 > **Regular users should not use `dev`.** It contains the shared cross-platform code with
 > no OS-specific implementation and is not meant to be run directly.
@@ -70,6 +81,10 @@ Full details, including notarization and troubleshooting, are in the
 ---
 
 ## Setup — Windows
+
+> ⚠️ **Work in progress.** The Windows build compiles and the native layer is
+> implemented, but it has not yet been verified on real Windows hardware. Use it for
+> development/testing, not as a finished app.
 
 ```powershell
 git clone <repository-url>
