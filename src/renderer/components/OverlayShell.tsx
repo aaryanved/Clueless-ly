@@ -50,23 +50,24 @@ export function OverlayShell(): JSX.Element {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="topbar__left">
-          <span className="brand">
-            <span className="brand__dot" data-ready={state.status?.ready ? 'yes' : 'no'} />
-            Clueless-ly
-          </span>
-          <span className="brand__by">by AVB</span>
+      <header className="topbar" {...interactiveProps()}>
+        <div className="topbar__zone topbar__zone--left">
+          <button className="icon-btn icon-btn--quit" title="Quit Clueless-ly" onClick={() => void window.clueless.quit()}>
+            <CloseIcon />
+          </button>
         </div>
 
-        <div className="topbar__right">
-          <button className="icon-btn" title="New conversation" onClick={() => void newConversation()} {...interactiveProps()}>
+        <button className="brand brand--btn" title="Minimize to pill" onClick={() => void minimize()}>
+          <span className="brand__logo" data-ready={state.status?.ready ? 'yes' : 'no'}>¿?</span>
+          <span className="brand__name">Clueless-ly</span>
+          <span className="brand__by">by AVB</span>
+        </button>
+
+        <div className="topbar__zone topbar__zone--right">
+          <button className="icon-btn" title="New conversation" onClick={() => void newConversation()}>
             <PlusIcon />
           </button>
-          <button className="icon-btn" title="Minimize" onClick={() => void minimize()} {...interactiveProps()}>
-            <MinimizeIcon />
-          </button>
-          <button className="icon-btn" title="Settings & sessions" onClick={() => setShowSettings(true)} {...interactiveProps()}>
+          <button className="icon-btn" title="Settings & context" onClick={() => setShowSettings(true)}>
             <GearIcon />
           </button>
         </div>
@@ -103,7 +104,7 @@ function Pill({ live, onClick }: { live: boolean; onClick: () => void }): JSX.El
     return () => leaveInteractive()
   }, [])
   return (
-    <div className="pill" onClick={onClick} title="Click to expand">
+    <div className="pill" onClick={onClick} title="Click to expand" {...interactiveProps()}>
       <span className="pill__dot" data-on={live ? 'yes' : 'no'} />
       <span className="pill__label">Clueless-ly</span>
     </div>
@@ -118,10 +119,10 @@ function PlusIcon(): JSX.Element {
   )
 }
 
-function MinimizeIcon(): JSX.Element {
+function CloseIcon(): JSX.Element {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-      <path d="M6 12h12" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+      <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   )
 }

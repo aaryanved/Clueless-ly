@@ -86,43 +86,64 @@ textarea {
 
 .topbar {
   -webkit-app-region: drag;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--border);
 }
-.topbar__left,
-.topbar__right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.topbar__right {
-  -webkit-app-region: no-drag;
-}
-
-.brand {
+.topbar__zone {
   display: flex;
   align-items: center;
   gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+/* Centered brand doubles as the minimize-to-pill button. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-weight: 600;
   letter-spacing: 0.01em;
 }
-.brand__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--muted);
+.brand--btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
 }
-.brand__dot[data-ready='yes'] {
-  background: var(--accent-2);
+.brand--btn:hover {
+  background: var(--panel-2);
+}
+.brand__logo {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: -0.04em;
+}
+.brand__logo[data-ready='yes'] {
+  color: var(--accent-2);
+}
+.brand__name {
+  font-weight: 600;
 }
 .brand__by {
   color: var(--muted);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
+}
+.icon-btn--quit:hover {
+  background: rgba(255, 59, 48, 0.16);
+  color: #ff453a;
 }
 
 .listen {
@@ -771,4 +792,47 @@ textarea {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---- Markdown headings & lists ---- */
+.md__h {
+  margin: 6px 0 2px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+.md__h1 {
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.md__h2 {
+  font-size: 15.5px;
+  letter-spacing: -0.01em;
+}
+.md__h3 {
+  font-size: 14px;
+  color: var(--fg);
+}
+.md__h4 {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: none;
+}
+.md__list {
+  margin: 4px 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.md__list li {
+  line-height: 1.5;
+}
+
+/* Inline soundwave sits next to the speaker label. */
+.seg__who .wave {
+  margin-left: 5px;
+  height: 10px;
+}
+.seg__who .wave__bar {
+  height: 10px;
 }

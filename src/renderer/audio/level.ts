@@ -1,23 +1,24 @@
-// A tiny observable for live input level (0..1), fed by the capture graph and read by
-// the soundwave indicator. Kept outside React so the audio callback can update it
-// cheaply without re-rendering on every frame.
+// Per-role live input level (0..1), fed by the capture graph and read by the soundwave
+// indicators. 'me' = microphone, 'them' = system audio. Kept outside React so the audio
+// callback can update cheaply without re-rendering every frame.
 
+export type LevelRole = 'me' | 'them'
 type Listener = (level: number) => void
 
-const listeners = new Set<Listener>()
-let current = 0
+const levels: Record<LevelRole, number> = { me: 0, them: 0 }
+const listeners: Record<LevelRole, Set<Listener>> = { me: new Set(), them: new Set() }
 
-export function setAudioLevel(level: number): void {
-  // Smooth a little so the meter glides rather than jitters.
-  current = current * 0.6 + Math.min(1, level) * 0.4
-  for (const l of listeners) l(current)
+export function setAudioLevel(role: LevelRole, level: number): void {
+  // Smooth a little so meters glide rather than jitter.
+  levels[role] = levels[role] * 0.6 + Math.min(1, level) * 0.4
+  for (const l of listeners[role]) l(levels[role])
 }
 
-export function getAudioLevel(): number {
-  return current
+export function getAudioLevel(role: LevelRole): number {
+  return levels[role]
 }
 
-export function onAudioLevel(fn: Listener): () => void {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
+export function onAudioLevel(role: LevelRole, fn: Listener): () => void {
+  listeners[role].add(fn)
+  return () => listeners[role].delete(fn)
 }
