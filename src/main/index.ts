@@ -8,6 +8,7 @@ import { registerAiIpc } from './ai/ask-service'
 import { orchestrator, registerTranscriptionIpc } from './transcription/orchestrator'
 import { registerAutoAnswer } from './transcription/auto-answer'
 import { registerContextIpc, contextEngine } from './context/context-engine'
+import { screenObserver } from './context/screen-observer'
 import { sessionManager, registerSessionsIpc } from './sessions/session-manager'
 import { settingsService, registerSettingsIpc } from './settings/settings-service'
 import { defaultSettings } from './settings/defaults'
@@ -60,6 +61,14 @@ async function bootstrap(): Promise<void> {
   ipcMain.handle(IpcChannels.PlatformAudioSources, async () => platform.screen.listSources())
 
   ipcMain.handle(IpcChannels.AppQuit, async () => app.quit())
+
+  // Start a fresh conversation: clear the live transcript buffer and screen context,
+  // and begin a new session. (Saved-session history is handled separately.)
+  ipcMain.handle(IpcChannels.SessionNewConversation, async () => {
+    orchestrator.clearTranscript()
+    screenObserver.clear()
+    await sessionManager.create()
+  })
 
   registerAiIpc()
   registerTranscriptionIpc()

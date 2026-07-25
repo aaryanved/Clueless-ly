@@ -16,14 +16,18 @@ export function getOpenAI(): OpenAI {
   return client
 }
 
+export type ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string; detail?: 'low' | 'high' | 'auto' } }
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
-  content: string
+  content: string | ContentPart[]
 }
 
 /**
- * Stream a chat completion token-by-token. Yields incremental text deltas so callers
- * can forward them to the renderer as they arrive.
+ * Stream a chat completion token-by-token. Content may be plain text or an array of
+ * parts (text + images) for multimodal questions about the screen.
  */
 export async function* streamChat(
   messages: ChatMessage[],
@@ -32,7 +36,9 @@ export async function* streamChat(
   const openai = getOpenAI()
   const model = opts.model ?? getConfig().model
   const stream = await openai.chat.completions.create(
-    { model, messages, stream: true },
+    // The SDK types are stricter than our simplified ChatMessage; the runtime shape
+    // (string | content-parts) is exactly what the API accepts.
+    { model, messages: messages as never, stream: true },
     { signal: opts.signal }
   )
   for await (const chunk of stream) {
@@ -48,6 +54,6 @@ export async function complete(
 ): Promise<string> {
   const openai = getOpenAI()
   const model = opts.model ?? getConfig().model
-  const res = await openai.chat.completions.create({ model, messages })
+  const res = await openai.chat.completions.create({ model, messages: messages as never })
   return res.choices[0]?.message?.content ?? ''
 }

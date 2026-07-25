@@ -26,6 +26,10 @@ export class ScreenObserver {
     return this.latest
   }
 
+  clear(): void {
+    this.latest = null
+  }
+
   async capture(): Promise<ScreenSnapshot | null> {
     const platform = getPlatform()
     const frame = await platform.screen.captureFrame().catch((err) => {

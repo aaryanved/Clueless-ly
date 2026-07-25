@@ -48,6 +48,8 @@ const api = {
     list: (): Promise<SessionSummary[]> => ipcRenderer.invoke(IpcChannels.SessionsList),
     create: (title?: string): Promise<Session> =>
       ipcRenderer.invoke(IpcChannels.SessionCreate, title),
+    newConversation: (): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.SessionNewConversation),
     get: (id: string): Promise<Session | null> => ipcRenderer.invoke(IpcChannels.SessionGet, id),
     appendNote: (id: string, note: Omit<Note, 'id' | 'at'>): Promise<Note> =>
       ipcRenderer.invoke(IpcChannels.SessionAppendNote, id, note),
