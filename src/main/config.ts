@@ -81,7 +81,7 @@ function keyLooksValid(key: string): boolean {
 
 /**
  * Public, secret-safe view of configuration health. Only ever reports whether the
- * key exists and looks well-formed — never the value itself.
+ * key exists and looks well-formed - never the value itself.
  */
 export function configStatus(): ConfigStatus {
   const cfg = getConfig()

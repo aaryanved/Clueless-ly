@@ -4,8 +4,6 @@ import type { AppSettings } from '@shared/types'
 export function SettingsPanel(): JSX.Element {
   const { state, dispatch } = useStore()
   const settings = state.settings
-  const cfg = state.status?.config
-  const plat = state.status?.platform
 
   async function patch(p: Partial<AppSettings>): Promise<void> {
     try {
@@ -16,31 +14,59 @@ export function SettingsPanel(): JSX.Element {
     }
   }
 
+  const opacityPct = Math.round((settings?.overlayOpacity ?? 0.52) * 100)
+
   return (
     <div className="panel panel--scroll">
       <section className="group">
-        <h3>OpenAI</h3>
+        <h3>Appearance</h3>
         <div className="row">
-          <span>API key</span>
-          <span className={cfg?.openaiKeyPresent ? 'ok' : 'bad'}>
-            {cfg?.openaiKeyPresent ? (cfg.openaiKeyLooksValid ? 'Configured' : 'Present (check format)') : 'Missing'}
-          </span>
+          <span>Theme</span>
+          <div className="drawer__switch">
+            <button
+              className={settings?.theme === 'dark' ? 'seg-btn seg-btn--on' : 'seg-btn'}
+              onClick={() => patch({ theme: 'dark' })}
+            >
+              Dark
+            </button>
+            <button
+              className={settings?.theme === 'light' ? 'seg-btn seg-btn--on' : 'seg-btn'}
+              onClick={() => patch({ theme: 'light' })}
+            >
+              Light
+            </button>
+          </div>
         </div>
         <div className="row">
-          <span>Answer model</span>
-          <span className="muted">{cfg?.model ?? '—'}</span>
+          <span>Opacity</span>
+          <span className="muted small">{opacityPct}%</span>
         </div>
-        <div className="row">
-          <span>Realtime model</span>
-          <span className="muted">{cfg?.realtimeModel ?? '—'}</span>
-        </div>
-        {cfg?.problems?.length ? (
-          <ul className="problems">
-            {cfg.problems.map((p, i) => (
-              <li key={i}>{p}</li>
-            ))}
-          </ul>
-        ) : null}
+        <input
+          className="slider"
+          type="range"
+          min={0.2}
+          max={1}
+          step={0.02}
+          value={settings?.overlayOpacity ?? 0.52}
+          onChange={(e) => patch({ overlayOpacity: Number(e.target.value) })}
+        />
+      </section>
+
+      <section className="group">
+        <h3>Behavior</h3>
+        <Toggle
+          label="Click through overlay"
+          checked={!!settings?.clickThroughEnabled}
+          onChange={(v) => patch({ clickThroughEnabled: v })}
+        />
+        <Toggle
+          label="Hide from screen sharing"
+          checked={!!settings?.contentProtectionEnabled}
+          onChange={(v) => {
+            void window.clueless.overlay.setContentProtection(v)
+            void patch({ contentProtectionEnabled: v })
+          }}
+        />
       </section>
 
       <section className="group">
@@ -54,27 +80,12 @@ export function SettingsPanel(): JSX.Element {
           label="System audio"
           checked={!!settings?.systemAudioEnabled}
           onChange={(v) => patch({ systemAudioEnabled: v })}
-          hint={plat?.systemAudio.supported ? plat.systemAudio.method : 'not supported on this build'}
         />
         <Toggle
           label="Screen context"
           checked={!!settings?.captureScreenContext}
           onChange={(v) => patch({ captureScreenContext: v })}
         />
-      </section>
-
-      <section className="group">
-        <h3>Overlay privacy</h3>
-        <Toggle
-          label="Hide from screen sharing"
-          checked={!!settings?.contentProtectionEnabled}
-          onChange={(v) => {
-            void window.clueless.overlay.setContentProtection(v)
-            void patch({ contentProtectionEnabled: v })
-          }}
-          hint={plat?.contentProtection.supported ? 'supported' : 'unsupported on this OS'}
-        />
-        <p className="muted small">{plat?.contentProtection.notes}</p>
       </section>
     </div>
   )
@@ -84,14 +95,10 @@ function Toggle(props: {
   label: string
   checked: boolean
   onChange: (v: boolean) => void
-  hint?: string
 }): JSX.Element {
   return (
     <label className="row toggle">
-      <span>
-        {props.label}
-        {props.hint && <em className="muted small"> — {props.hint}</em>}
-      </span>
+      <span>{props.label}</span>
       <input type="checkbox" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
     </label>
   )

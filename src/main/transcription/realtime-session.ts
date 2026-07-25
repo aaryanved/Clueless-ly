@@ -21,7 +21,7 @@ interface SessionCallbacks {
 /**
  * A single OpenAI Realtime *transcription* connection, dedicated to one speaker role
  * (mic = 'me', system audio = 'them'). Uses the GA Realtime API transcription intent
- * (`?intent=transcription`) — the older Beta shape (with the `OpenAI-Beta: realtime=v1`
+ * (`?intent=transcription`) - the older Beta shape (with the `OpenAI-Beta: realtime=v1`
  * header) was retired by the server and closed the socket with code 4000. In the GA
  * shape all audio config is nested under `session.audio.input`. Audio is PCM16 mono
  * @ 24 kHz.

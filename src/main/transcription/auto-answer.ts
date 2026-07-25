@@ -18,7 +18,7 @@ function looksLikeQuestion(text: string): boolean {
 
 /**
  * Watches finalised transcript segments and automatically answers any that look like a
- * question — so when the other party asks something, Clueless-ly responds without you
+ * question - so when the other party asks something, Clueless-ly responds without you
  * having to type it. Each segment is answered at most once.
  */
 export function registerAutoAnswer(): void {

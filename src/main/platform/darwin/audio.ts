@@ -13,7 +13,7 @@ export class DarwinAudio implements AudioAdapter {
       systemAudioMethod: 'screencapturekit',
       notes:
         'System audio uses ScreenCaptureKit (macOS 13+). Requires Screen Recording ' +
-        'permission. Not a microphone loopback — the actual rendered system audio is captured.'
+        'permission. Not a microphone loopback - the actual rendered system audio is captured.'
     }
   }
 

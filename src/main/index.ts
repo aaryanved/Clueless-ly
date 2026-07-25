@@ -76,9 +76,9 @@ async function bootstrap(): Promise<void> {
   setupShortcuts(platform, overlay, initial.shortcuts)
   createTray(overlay)
 
-  // Start as a click-through ghost: mouse events pass through to whatever is behind,
-  // except where the renderer temporarily re-enables interactivity (chat box, gear).
-  overlay.setIgnoreMouseEvents(true, { forward: true })
+  // Start click-through per the saved setting: mouse events pass through to whatever
+  // is behind, except where the renderer re-enables interactivity (chat box, gear).
+  overlay.setIgnoreMouseEvents(initial.clickThroughEnabled, { forward: true })
 
   // Overlay UX controls.
   ipcMain.handle(IpcChannels.OverlaySetInteractive, async (_e, enabled: boolean) => {
