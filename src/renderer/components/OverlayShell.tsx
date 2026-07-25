@@ -26,6 +26,16 @@ export function OverlayShell(): JSX.Element {
     if (state.settings) applyAppearance(state.settings)
   }, [state.settings])
 
+  async function newConversation(): Promise<void> {
+    try {
+      await window.clueless.sessions.newConversation()
+    } catch {
+      /* non-fatal */
+    }
+    dispatch({ type: 'clearMessages' })
+    dispatch({ type: 'clearTranscript' })
+  }
+
   return (
     <div className="app">
       <header className="topbar">
@@ -38,6 +48,14 @@ export function OverlayShell(): JSX.Element {
         </div>
 
         <div className="topbar__right">
+          <button
+            className="icon-btn"
+            title="New conversation"
+            onClick={() => void newConversation()}
+            {...interactiveProps()}
+          >
+            <PlusIcon />
+          </button>
           <button
             className="icon-btn"
             title="Settings & sessions"
@@ -70,6 +88,23 @@ export function OverlayShell(): JSX.Element {
 
       {showSettings && <SettingsDrawer onClose={() => setShowSettings(false)} />}
     </div>
+  )
+}
+
+function PlusIcon(): JSX.Element {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M12 5v14M5 12h14" />
+    </svg>
   )
 }
 

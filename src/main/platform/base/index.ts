@@ -102,7 +102,15 @@ export class BaseScreen implements ScreenAdapter {
 
   async captureFrame(sourceId?: string) {
     const primary = screen.getPrimaryDisplay()
-    const { width, height } = primary.size
+    // Capture at native (retina) resolution, capped to ~2048px on the long side so
+    // on-screen text stays legible for the vision model without an oversized payload.
+    const sf = primary.scaleFactor || 1
+    const nativeW = Math.round(primary.size.width * sf)
+    const nativeH = Math.round(primary.size.height * sf)
+    const scale = Math.min(1, 2048 / Math.max(nativeW, nativeH))
+    const width = Math.round(nativeW * scale)
+    const height = Math.round(nativeH * scale)
+
     const sources = await desktopCapturer.getSources({
       types: ['screen'],
       thumbnailSize: { width, height }

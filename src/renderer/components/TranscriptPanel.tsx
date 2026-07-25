@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from '../state/store'
+import { interactiveProps } from '../interactivity'
 
 /** Live transcript column. Segments stream in from the transcription orchestrator. */
 export function TranscriptPanel(): JSX.Element {
@@ -13,7 +14,7 @@ export function TranscriptPanel(): JSX.Element {
 
   return (
     <div className="transcript-col">
-      <div className="transcript-col__head">
+      <div className="transcript-col__head" {...interactiveProps()}>
         <span className="transcript-col__title">
           Live transcript
           {state.transcribing && <span className="live-dot" title="Listening" />}

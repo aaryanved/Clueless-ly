@@ -3,7 +3,8 @@ import { IpcChannels } from '@shared/ipc'
 import type { AiAskRequest, ContextSnapshot, TranscriptSegment } from '@shared/types'
 import { orchestrator } from '../transcription/orchestrator'
 import { screenObserver } from './screen-observer'
-import { setAskContextProvider } from '../ai/ask-service'
+import { getPlatform } from '../platform'
+import { setAskContextProvider, type AskContext } from '../ai/ask-service'
 
 /** Rough token estimate: ~4 characters per token is close enough for budgeting. */
 export function estimateTokens(text: string): number {
@@ -11,9 +12,10 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Assembles the grounding context handed to the model for each question. It pulls
- * the latest screen snapshot and the recent transcript, then trims the transcript
- * (oldest first) to stay within a token budget so we never blow the context window.
+ * Assembles grounding context for each question: the recent transcript as text (trimmed
+ * to a token budget) and, when screen context is on, a fresh high-resolution screenshot
+ * passed straight to the vision model. Sending the real image rather than a
+ * pre-summarised description dramatically improves reading of on-screen text.
  */
 export class ContextEngine {
   private maxTokens = 2000
@@ -27,44 +29,36 @@ export class ContextEngine {
     return `${who}: ${s.text}`
   }
 
-  buildContext(req: AiAskRequest): string {
-    const parts: string[] = []
+  /** Transcript-only text context, newest-first within the token budget. */
+  buildTranscriptText(): string {
+    const recent = orchestrator.recent(100).filter((s) => s.isFinal || s.text.length > 0)
     let budget = this.maxTokens
+    const lines: string[] = []
+    for (let i = recent.length - 1; i >= 0; i--) {
+      const line = this.formatSegment(recent[i])
+      const cost = estimateTokens(line)
+      if (cost > budget) break
+      budget -= cost
+      lines.unshift(line)
+    }
+    return lines.join('\n')
+  }
 
+  /** Gather the full context (text + optional screenshot) for an ask. */
+  async gather(req: AiAskRequest): Promise<AskContext> {
+    const text = req.useTranscriptContext ? this.buildTranscriptText() : ''
+    let imageDataUrl: string | undefined
     if (req.useScreenContext) {
-      const screen = screenObserver.getLatest()
-      if (screen) {
-        const block = `Screen (captured ${new Date(screen.capturedAt).toLocaleTimeString()}):\n${screen.summary}`
-        parts.push(block)
-        budget -= estimateTokens(block)
-      }
+      const frame = await getPlatform().screen.captureFrame().catch(() => null)
+      if (frame) imageDataUrl = frame.dataUrl
     }
-
-    if (req.useTranscriptContext) {
-      const recent = orchestrator.recent(100).filter((s) => s.isFinal || s.text.length > 0)
-      const lines: string[] = []
-      // Walk newest -> oldest, keeping what fits, then restore chronological order.
-      for (let i = recent.length - 1; i >= 0; i--) {
-        const line = this.formatSegment(recent[i])
-        const cost = estimateTokens(line)
-        if (cost > budget) break
-        budget -= cost
-        lines.unshift(line)
-      }
-      if (lines.length) parts.push(`Conversation so far:\n${lines.join('\n')}`)
-    }
-
-    return parts.join('\n\n')
+    return { text, imageDataUrl }
   }
 
   getSnapshot(): ContextSnapshot {
     const transcript = orchestrator.recent(100)
     const screen = screenObserver.getLatest() ?? undefined
-    const text = this.buildContext({
-      question: '',
-      useScreenContext: true,
-      useTranscriptContext: true
-    })
+    const text = this.buildTranscriptText()
     return { transcript, screen, tokenEstimate: estimateTokens(text) }
   }
 }
@@ -72,17 +66,8 @@ export class ContextEngine {
 export const contextEngine = new ContextEngine()
 
 export function registerContextIpc(): void {
-  // Feed real grounding context into the ask pipeline. When the user asks with screen
-  // context enabled and the last snapshot is stale, grab a fresh frame first.
-  setAskContextProvider(async (req) => {
-    if (req.useScreenContext) {
-      const latest = screenObserver.getLatest()
-      if (!latest || Date.now() - latest.capturedAt > 5000) {
-        await screenObserver.capture().catch(() => {})
-      }
-    }
-    return contextEngine.buildContext(req)
-  })
+  // Feed real grounding context into the ask pipeline.
+  setAskContextProvider((req) => contextEngine.gather(req))
 
   ipcMain.handle(IpcChannels.ContextCaptureScreen, async () => screenObserver.capture())
   ipcMain.handle(IpcChannels.ContextGetSnapshot, async () => contextEngine.getSnapshot())

@@ -20,6 +20,7 @@ export const IpcChannels = {
 
   SessionsList: 'sessions:list',
   SessionCreate: 'sessions:create',
+  SessionNewConversation: 'sessions:new-conversation',
   SessionGet: 'sessions:get',
   SessionAppendNote: 'sessions:append-note',
   SessionEnd: 'sessions:end',

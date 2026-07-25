@@ -60,6 +60,7 @@ type Action =
   | { type: 'setSessions'; sessions: SessionSummary[] }
   | { type: 'upsertSegment'; segment: TranscriptSegment }
   | { type: 'clearTranscript' }
+  | { type: 'clearMessages' }
   | { type: 'startMessage'; id: string; question: string }
   | { type: 'appendToken'; id: string; token: string }
   | { type: 'finishMessage'; id: string; text: string }
@@ -85,6 +86,8 @@ function reducer(state: UiState, action: Action): UiState {
     }
     case 'clearTranscript':
       return { ...state, transcript: [] }
+    case 'clearMessages':
+      return { ...state, messages: [] }
     case 'startMessage':
       return {
         ...state,

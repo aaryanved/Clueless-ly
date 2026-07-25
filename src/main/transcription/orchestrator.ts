@@ -28,6 +28,11 @@ export class TranscriptionOrchestrator {
     return this.segments.slice(-limit)
   }
 
+  /** Drop the in-memory transcript buffer (used when starting a new conversation). */
+  clearTranscript(): void {
+    this.segments = []
+  }
+
   onSegment(hook: (seg: TranscriptSegment) => void): void {
     this.onSegmentHooks.push(hook)
   }
