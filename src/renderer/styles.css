@@ -281,6 +281,9 @@ textarea {
 .msg__q {
   font-weight: 600;
   margin-bottom: 5px;
+  /* Questions in the assistant panel are green (like the logo) to set them apart
+     from answers. */
+  color: var(--accent-2);
 }
 .msg__a {
   white-space: pre-wrap;
@@ -337,6 +340,15 @@ textarea {
   padding: 8px 18px;
   font-weight: 600;
   cursor: pointer;
+  opacity: 1;
+}
+/* The Ask button matches the green logo and is fully opaque. */
+.ask__btn {
+  background: var(--accent-2);
+  color: #08130a;
+}
+.ask__btn:hover {
+  filter: brightness(1.05);
 }
 .btn--ghost {
   background: var(--panel-2);
