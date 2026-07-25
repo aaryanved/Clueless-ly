@@ -76,6 +76,7 @@ textarea {
 .seg-btn,
 .link-btn,
 .code__copy {
+  -webkit-app-region: no-drag;
   transition: background 0.15s ease, color 0.15s ease, transform 0.06s ease;
 }
 .icon-btn:active,
@@ -462,6 +463,9 @@ textarea {
 .drawer-scrim {
   position: absolute;
   inset: 0;
+  /* The drawer overlays the topbar; without this its header would fall inside the
+     window-drag region and its buttons (tabs) would drag the window instead of click. */
+  -webkit-app-region: no-drag;
   background: rgba(0, 0, 0, 0.32);
   display: flex;
   justify-content: flex-end;
