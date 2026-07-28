@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { IpcChannels } from '@shared/ipc'
-import type { AppSettings } from '@shared/types'
+import type { AppModes, AppSettings } from '@shared/types'
 import { createLogger } from '../logging'
 import { store } from '../storage/json-store'
 import type { StorageAdapter } from '../storage/storage-adapter'
@@ -9,6 +9,19 @@ const log = createLogger('settings')
 const KEY = 'settings'
 
 export type SettingsListener = (next: AppSettings, patch: Partial<AppSettings>) => void
+
+/**
+ * Merge saved modes over the defaults, keeping only keys this build knows about, so a
+ * mode that has been removed from the app cannot linger in the user's settings file.
+ */
+function mergeModes(defaults: AppModes, saved: Partial<AppModes> | undefined): AppModes {
+  const modes = { ...defaults }
+  for (const key of Object.keys(modes) as Array<keyof AppModes>) {
+    const value = saved?.[key]
+    if (typeof value === 'boolean') modes[key] = value
+  }
+  return modes
+}
 
 /**
  * Persisted user settings. Defaults are computed once from config + platform
@@ -26,7 +39,7 @@ export class SettingsService {
     this.current = {
       ...defaults,
       ...(saved ?? {}),
-      modes: { ...defaults.modes, ...(saved?.modes ?? {}) },
+      modes: mergeModes(defaults.modes, saved?.modes),
       shortcuts: { ...defaults.shortcuts, ...(saved?.shortcuts ?? {}) }
     }
     log.info('settings loaded')
@@ -45,7 +58,7 @@ export class SettingsService {
     const next: AppSettings = {
       ...this.get(),
       ...patch,
-      modes: { ...this.get().modes, ...(patch.modes ?? {}) },
+      modes: mergeModes(this.get().modes, patch.modes),
       shortcuts: { ...this.get().shortcuts, ...(patch.shortcuts ?? {}) }
     }
     this.current = next

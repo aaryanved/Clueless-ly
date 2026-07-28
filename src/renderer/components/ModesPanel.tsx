@@ -5,8 +5,7 @@ import { Switch } from './Switch'
 const MODES: { key: keyof AppModes; label: string; desc: string; hasContext?: boolean; disabled?: boolean }[] = [
   { key: 'coding', label: 'Coding', desc: 'Prioritise correct, complete code solutions. Hides the transcript (toggle it back anytime).' },
   { key: 'interview', label: 'Interview', desc: 'Comprehensive, read-aloud answers grounded in the interview material you provide.', hasContext: true },
-  { key: 'speech', label: 'Speech', desc: 'Present a speech/PPT, then answer audience questions in line with it.', hasContext: true },
-  { key: 'chess', label: 'Chess', desc: 'Chess powered by KnightVision' }
+  { key: 'speech', label: 'Speech', desc: 'Present a speech/PPT, then answer audience questions in line with it.', hasContext: true }
 ]
 
 /** onOpenContext navigates the drawer to a mode's context sub-view (e.g. interview). */

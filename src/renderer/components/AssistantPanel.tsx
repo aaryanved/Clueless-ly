@@ -62,7 +62,10 @@ export function AssistantPanel({
 
   return (
     <div className="panel">
-      <div className="messages">
+      {/* Must be marked interactive: in click-through mode the window only captures the
+          mouse over a [data-interactive] region, and without it the wheel (and text
+          selection of answers) goes to whatever app is behind the overlay. */}
+      <div className="messages" {...interactiveProps()}>
         {state.messages.length === 0 && (
           <p className="muted">
             Listening is on. Ask anything about what's on your screen or being said, and
