@@ -66,6 +66,11 @@ const api = {
     newConversation: (): Promise<void> =>
       ipcRenderer.invoke(IpcChannels.SessionNewConversation),
     get: (id: string): Promise<Session | null> => ipcRenderer.invoke(IpcChannels.SessionGet, id),
+    activate: (id: string): Promise<Session | null> =>
+      ipcRenderer.invoke(IpcChannels.SessionActivate, id),
+    rename: (id: string, title: string): Promise<void> =>
+      ipcRenderer.invoke(IpcChannels.SessionRename, id, title),
+    remove: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.SessionDelete, id),
     appendNote: (id: string, note: Omit<Note, 'id' | 'at'>): Promise<Note> =>
       ipcRenderer.invoke(IpcChannels.SessionAppendNote, id, note),
     end: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.SessionEnd, id),
@@ -110,7 +115,8 @@ const api = {
     status: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtStatus, cb),
     error: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtError, cb),
     shortcut: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtShortcut, cb),
-    talk: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtTalk, cb)
+    talk: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtTalk, cb),
+    sessions: (cb: (payload: unknown) => void) => subscribe(IpcChannels.EvtSessions, cb)
   }
 }
 

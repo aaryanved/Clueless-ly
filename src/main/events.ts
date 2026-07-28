@@ -5,6 +5,7 @@ import type {
   AiQuestionEvent,
   AiTokenEvent,
   ErrorEvent,
+  SessionsEvent,
   ShortcutEvent,
   StatusEvent,
   TalkEvent,
@@ -32,5 +33,6 @@ export const events = {
   status: (e: StatusEvent) => send(IpcChannels.EvtStatus, e),
   error: (e: ErrorEvent) => send(IpcChannels.EvtError, e),
   shortcut: (e: ShortcutEvent) => send(IpcChannels.EvtShortcut, e),
-  talk: (e: TalkEvent) => send(IpcChannels.EvtTalk, e)
+  talk: (e: TalkEvent) => send(IpcChannels.EvtTalk, e),
+  sessions: (e: SessionsEvent) => send(IpcChannels.EvtSessions, e)
 }

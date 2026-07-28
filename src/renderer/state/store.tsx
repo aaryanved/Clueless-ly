@@ -14,6 +14,8 @@ import type {
   AppSettings,
   AppStatus,
   ErrorEvent,
+  Session,
+  SessionsEvent,
   SessionSummary,
   ShortcutEvent,
   StatusEvent,
@@ -39,6 +41,10 @@ export interface UiState {
   transcript: TranscriptSegment[]
   messages: AiMessage[]
   sessions: SessionSummary[]
+  // The saved session new content is being folded into. Null until the current
+  // conversation has produced something worth keeping.
+  activeSessionId: string | null
+  sidebarOpen: boolean
   transcribing: boolean
   // Push-to-talk mic state (toggled by the talk hotkey).
   talkActive: boolean
@@ -48,6 +54,16 @@ export interface UiState {
   prefill: { text: string; bump: number }
 }
 
+// The sidebar is a pure UI preference, so it lives in the renderer rather than settings.
+const SIDEBAR_KEY = 'clueless.sidebarOpen'
+function readSidebarPref(): boolean {
+  try {
+    return window.localStorage.getItem(SIDEBAR_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 const initialState: UiState = {
   tab: 'assistant',
   status: null,
@@ -55,6 +71,8 @@ const initialState: UiState = {
   transcript: [],
   messages: [],
   sessions: [],
+  activeSessionId: null,
+  sidebarOpen: readSidebarPref(),
   transcribing: false,
   talkActive: false,
   banner: null,
@@ -65,7 +83,9 @@ type Action =
   | { type: 'setTab'; tab: TabId }
   | { type: 'setStatus'; status: AppStatus }
   | { type: 'setSettings'; settings: AppSettings }
-  | { type: 'setSessions'; sessions: SessionSummary[] }
+  | { type: 'setSessions'; sessions: SessionSummary[]; activeId?: string }
+  | { type: 'loadSession'; session: Session }
+  | { type: 'toggleSidebar'; open?: boolean }
   | { type: 'upsertSegment'; segment: TranscriptSegment }
   | { type: 'clearTranscript' }
   | { type: 'clearMessages' }
@@ -86,7 +106,33 @@ function reducer(state: UiState, action: Action): UiState {
     case 'setSettings':
       return { ...state, settings: action.settings }
     case 'setSessions':
-      return { ...state, sessions: action.sessions }
+      return {
+        ...state,
+        sessions: action.sessions,
+        activeSessionId: action.activeId ?? null
+      }
+    case 'loadSession':
+      return {
+        ...state,
+        activeSessionId: action.session.id,
+        transcript: action.session.transcript.slice(-200),
+        messages: action.session.messages.map((m) => ({
+          id: m.id,
+          question: m.question,
+          answer: m.answer,
+          streaming: false,
+          at: m.at
+        }))
+      }
+    case 'toggleSidebar': {
+      const open = action.open ?? !state.sidebarOpen
+      try {
+        window.localStorage.setItem(SIDEBAR_KEY, open ? '1' : '0')
+      } catch {
+        /* private mode / storage disabled: the preference just won't persist */
+      }
+      return { ...state, sidebarOpen: open }
+    }
     case 'upsertSegment': {
       const idx = state.transcript.findIndex((s) => s.id === action.segment.id)
       const next = state.transcript.slice()
@@ -177,6 +223,12 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       }),
       window.clueless.on.talk((p) => {
         d({ type: 'setTalkActive', value: (p as TalkEvent).active })
+      }),
+      // Main pushes the history whenever it changes, so the sidebar stays live as
+      // titles are derived and transcript/answers are folded in.
+      window.clueless.on.sessions((p) => {
+        const e = p as SessionsEvent
+        d({ type: 'setSessions', sessions: e.sessions, activeId: e.activeId })
       })
     ]
 

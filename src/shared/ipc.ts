@@ -31,6 +31,9 @@ export const IpcChannels = {
   SessionCreate: 'sessions:create',
   SessionNewConversation: 'sessions:new-conversation',
   SessionGet: 'sessions:get',
+  SessionActivate: 'sessions:activate',
+  SessionRename: 'sessions:rename',
+  SessionDelete: 'sessions:delete',
   SessionAppendNote: 'sessions:append-note',
   SessionEnd: 'sessions:end',
   SessionSummarize: 'sessions:summarize',
@@ -60,7 +63,8 @@ export const IpcChannels = {
   EvtStatus: 'evt:status',
   EvtError: 'evt:error',
   EvtShortcut: 'evt:shortcut',
-  EvtTalk: 'evt:talk'
+  EvtTalk: 'evt:talk',
+  EvtSessions: 'evt:sessions'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

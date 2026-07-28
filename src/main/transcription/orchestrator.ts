@@ -39,6 +39,15 @@ export class TranscriptionOrchestrator {
     this.recentThem = []
   }
 
+  /**
+   * Replace the buffer with a saved session's transcript so reopening a session also
+   * restores the grounding context, not just the visible history.
+   */
+  setTranscript(segments: TranscriptSegment[]): void {
+    this.clearTranscript()
+    this.segments = segments.slice(-500)
+  }
+
   onSegment(hook: (seg: TranscriptSegment) => void): void {
     this.onSegmentHooks.push(hook)
   }

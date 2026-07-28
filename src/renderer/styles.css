@@ -244,9 +244,15 @@ textarea {
   color: #cfe0ff;
 }
 
-/* ---- Workspace (two panes, no tabs) ---- */
+/* ---- Workspace (sessions sidebar + panes, no tabs) ---- */
 .workspace {
   flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.workspace__panes {
+  flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
 }
@@ -730,10 +736,14 @@ textarea {
   animation: pulse 1.2s infinite;
 }
 
-/* ---- Narrow (left/right) layout: stack the two panes ---- */
+/* ---- Narrow (left/right) layout: stack the panes, keep the sidebar beside them ---- */
 @media (max-width: 720px) {
-  .workspace {
+  .workspace__panes {
     flex-direction: column;
+  }
+  .sidebar {
+    width: 172px;
+    min-width: 172px;
   }
   .workspace__main {
     border-right: none;
@@ -1110,6 +1120,180 @@ textarea {
 }
 .ctx-submit {
   margin-left: auto;
+}
+
+/* ---- Sessions sidebar (chat history) ---- */
+.sidebar {
+  width: 216px;
+  min-width: 216px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.12);
+  animation: sidebar-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+:root[data-theme='light'] .sidebar {
+  background: rgba(0, 0, 0, 0.035);
+}
+@keyframes sidebar-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.sidebar__head {
+  padding: 10px 10px 6px;
+}
+.sidebar__new {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 9px;
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+.sidebar__new:hover {
+  background: var(--panel-2);
+}
+.sidebar__search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 10px 8px;
+  padding: 5px 9px;
+  border: 0.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--muted);
+}
+.sidebar__search:focus-within {
+  border-color: var(--accent);
+}
+.sidebar__search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  color: var(--fg);
+  user-select: text;
+}
+.sidebar__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 12px;
+}
+.sidebar__empty {
+  padding: 8px 4px;
+  line-height: 1.45;
+}
+.sidebar__group {
+  margin-bottom: 10px;
+}
+.sidebar__group-label {
+  margin: 8px 0 4px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* One saved conversation: title fills the row, actions fade in on hover. */
+.sess {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+.sess:hover {
+  background: var(--panel-2);
+}
+.sess--on {
+  background: var(--panel-2);
+  box-shadow: inset 0 0 0 0.5px var(--border);
+}
+.sess__open {
+  flex: 1;
+  min-width: 0;
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  color: var(--muted);
+  text-align: left;
+  font-size: 12.5px;
+  padding: 7px 4px 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sess:hover .sess__open,
+.sess--on .sess__open {
+  color: var(--fg);
+}
+.sess--on .sess__open {
+  font-weight: 600;
+}
+.sess__actions {
+  display: none;
+  align-items: center;
+  gap: 1px;
+  padding-right: 4px;
+}
+.sess:hover .sess__actions,
+.sess--on .sess__actions {
+  display: flex;
+}
+.sess__act {
+  -webkit-app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.sess__act:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg);
+}
+/* Armed state: the first click asks, the second deletes. */
+.sess__act--arm,
+.sess__act--arm:hover {
+  background: rgba(255, 59, 48, 0.18);
+  color: #ff453a;
+}
+.sidebar__rename {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  outline: none;
+  padding: 6px 8px;
+  font-size: 12.5px;
+  user-select: text;
 }
 
 /* ---- Interview context fields ---- */

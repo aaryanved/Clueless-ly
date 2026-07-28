@@ -108,6 +108,16 @@ function pushHistory(question: string, answer: string): void {
 export function clearAskHistory(): void {
   history.length = 0
 }
+/**
+ * Replace the rolling memory wholesale. Used when the user reopens a saved session so
+ * follow-ups continue from where that conversation left off.
+ */
+export function setAskHistory(entries: Array<{ question: string; answer: string }>): void {
+  history.length = 0
+  for (const e of entries.slice(-6)) {
+    if (e.answer.trim()) history.push({ question: e.question, answer: e.answer })
+  }
+}
 
 // Detect an explicit request to search the web.
 const SEARCH_INTENT =
