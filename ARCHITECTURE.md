@@ -37,6 +37,24 @@ platform contract so the shared code stays identical on every OS.
 | UI | `src/renderer/components` | Overlay shell, panels, modes, drawer |
 | UI state | `src/renderer/state/store.tsx` | Single reducer store fed by main→renderer events |
 
+## Session history
+
+`SessionManager` (`src/main/sessions`) is the local memory behind the sidebar. It persists
+one JSON file (`sessions.json` under userData) holding every conversation: its messages
+(question/answer pairs), transcript segments, notes and summary. A few rules are worth
+knowing before you change it:
+
+- **Sessions are created lazily.** "New chat" closes the current one and leaves no active
+  session; the next answer or final transcript segment opens a fresh one. An untouched
+  new chat is discarded rather than saved, so the list never fills with empty rows.
+- **Titles derive themselves** from the first question, or from the first spoken line for
+  listen-only sessions. A manual rename sets `titleLocked` and stops auto-titling.
+- **Reopening restores state, not just pixels.** `activate(id)` reseeds the AI's rolling
+  history (`setAskHistory`) and the orchestrator's transcript buffer, so follow-ups in a
+  reopened session still resolve against what was said in it.
+- **The renderer never polls.** Main pushes `EvtSessions` (list + active id) after every
+  mutation, throttled so streaming transcript segments don't spam the UI.
+
 ## The golden rule: no OS branching in feature code
 
 Shared code depends only on the interfaces in `platform/contracts.ts`. The **only** file

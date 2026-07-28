@@ -95,23 +95,38 @@ export interface Note {
   kind: 'user' | 'ai' | 'summary'
 }
 
+/** One completed question/answer exchange, stored so a session can be reopened. */
+export interface SessionMessage {
+  id: string
+  question: string
+  answer: string
+  at: number
+}
+
 export interface Session {
   id: string
   title: string
   startedAt: number
+  /** Last time anything was recorded into this session; drives sidebar ordering. */
+  updatedAt: number
   endedAt?: number
   transcript: TranscriptSegment[]
+  messages: SessionMessage[]
   notes: Note[]
   summary?: string
+  /** Set once the user renames a session, so auto-titling stops touching it. */
+  titleLocked?: boolean
 }
 
 export interface SessionSummary {
   id: string
   title: string
   startedAt: number
+  updatedAt: number
   endedAt?: number
   noteCount: number
   segmentCount: number
+  messageCount: number
 }
 
 export type ThemeMode = 'dark' | 'light'
@@ -192,4 +207,9 @@ export interface ShortcutEvent {
 }
 export interface TalkEvent {
   active: boolean
+}
+/** Pushed whenever the saved-session list or the active session changes. */
+export interface SessionsEvent {
+  sessions: SessionSummary[]
+  activeId?: string
 }

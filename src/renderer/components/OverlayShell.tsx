@@ -6,6 +6,7 @@ import { applyAppearance } from '../appearance'
 import { AssistantPanel } from './AssistantPanel'
 import { TranscriptPanel } from './TranscriptPanel'
 import { SettingsDrawer } from './SettingsDrawer'
+import { SessionsSidebar } from './SessionsSidebar'
 import { CodePane } from './CodePane'
 
 export function OverlayShell(): JSX.Element {
@@ -66,6 +67,13 @@ export function OverlayShell(): JSX.Element {
           <button className="icon-btn icon-btn--quit" title="Quit Clueless-ly" onClick={() => void window.clueless.quit()}>
             <CloseIcon />
           </button>
+          <button
+            className={state.sidebarOpen ? 'icon-btn icon-btn--on' : 'icon-btn'}
+            title={state.sidebarOpen ? 'Hide chat history' : 'Show chat history'}
+            onClick={() => dispatch({ type: 'toggleSidebar' })}
+          >
+            <SidebarIcon />
+          </button>
         </div>
 
         <button className="brand brand--btn" title="Minimize to pill" onClick={() => void minimize()}>
@@ -113,28 +121,33 @@ export function OverlayShell(): JSX.Element {
       )}
 
       <div className="workspace">
-        {technical && (
-          <aside className="workspace__code">
-            <CodePane />
-          </aside>
-        )}
-        <section className="workspace__main">
-          <AssistantPanel
-            narrationOnly={technical}
-            placeholder={
-              technical
-                ? 'Ask for a solution — code goes left, walkthrough here…'
-                : speech
-                  ? 'Type or speak an audience question — answered from your speech…'
-                  : undefined
-            }
-          />
-        </section>
-        {transcriptVisible && (
-          <aside className="workspace__side">
-            <TranscriptPanel />
-          </aside>
-        )}
+        {state.sidebarOpen && <SessionsSidebar />}
+        {/* The panes stack vertically in narrow docked layouts; the sidebar stays a
+            column beside them, so it lives outside this wrapper. */}
+        <div className="workspace__panes">
+          {technical && (
+            <aside className="workspace__code">
+              <CodePane />
+            </aside>
+          )}
+          <section className="workspace__main">
+            <AssistantPanel
+              narrationOnly={technical}
+              placeholder={
+                technical
+                  ? 'Ask for a solution — code goes left, walkthrough here…'
+                  : speech
+                    ? 'Type or speak an audience question — answered from your speech…'
+                    : undefined
+              }
+            />
+          </section>
+          {transcriptVisible && (
+            <aside className="workspace__side">
+              <TranscriptPanel />
+            </aside>
+          )}
+        </div>
       </div>
 
       {showSettings && <SettingsDrawer onClose={() => setShowSettings(false)} />}
@@ -168,6 +181,15 @@ function CloseIcon(): JSX.Element {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
       <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}
+
+function SidebarIcon(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <path d="M9.5 4v16" />
     </svg>
   )
 }

@@ -35,7 +35,9 @@ export function AssistantPanel({
         // Screen + transcript context are always used; the toggles were removed.
         useScreenContext: true,
         useTranscriptContext: true,
-        sessionId: state.status?.activeSessionId
+        // Undefined means "whatever session main has open", which is also what happens
+        // on the very first question of a new chat.
+        sessionId: state.activeSessionId ?? undefined
       })
       dispatch({ type: 'startMessage', id: requestId, question: q })
     } catch (err) {

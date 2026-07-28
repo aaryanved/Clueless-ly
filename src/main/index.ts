@@ -73,13 +73,14 @@ async function bootstrap(): Promise<void> {
   ipcMain.handle(IpcChannels.AppQuit, async () => app.quit())
   ipcMain.handle(IpcChannels.TalkToggle, async () => toggleTalk())
 
-  // Start a fresh conversation: clear the live transcript buffer and screen context,
-  // and begin a new session. (Saved-session history is handled separately.)
+  // Start a fresh conversation: clear the live transcript buffer, screen context and the
+  // AI's short-term memory, then close out the current session. The next piece of content
+  // lazily opens a new one, so an untouched "New chat" never lands in the history.
   ipcMain.handle(IpcChannels.SessionNewConversation, async () => {
     orchestrator.clearTranscript()
     screenObserver.clear()
     clearAskHistory()
-    await sessionManager.create()
+    await sessionManager.startNewConversation()
   })
 
   registerAiIpc()
