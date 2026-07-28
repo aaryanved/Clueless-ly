@@ -136,7 +136,6 @@ export type WindowLayout = 'center' | 'left' | 'right'
 export interface AppModes {
   coding: boolean
   interview: boolean
-  chess: boolean
   speech: boolean
 }
 

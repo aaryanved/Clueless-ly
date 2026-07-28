@@ -38,7 +38,7 @@ export function buildReference(): string {
   const parts: string[] = []
   if (data.user.text.trim()) parts.push(`User context:\n${data.user.text.trim()}`)
 
-  let modes = { coding: false, interview: false, chess: false, speech: false }
+  let modes = { coding: false, interview: false, speech: false }
   try {
     modes = settingsService.get().modes
   } catch {
