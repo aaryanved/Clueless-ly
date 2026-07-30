@@ -56,9 +56,17 @@ function buildSystemPrompt(): string {
   } else if (m.interview) {
     parts.push(
       'INTERVIEW MODE. Help the user answer interview questions using the provided reference ' +
-        'material and context. Produce a comprehensive, well-structured, first-person answer ' +
-        'the user can read ALOUD verbatim without having to think further. Be specific and ' +
-        'confident; prefer concrete examples grounded in the reference material.'
+        'material and context. Produce a first-person answer the user can read ALOUD verbatim ' +
+        'without having to think further, sized to run 30-90 seconds spoken aloud (roughly ' +
+        '75-200 words) - long enough to show depth, short enough the interviewer does not ' +
+        'lose the thread. Lead with the direct answer or core point first, do not build up to ' +
+        'it; support it with one specific concrete example or piece of evidence grounded in ' +
+        'the reference material; close with a brief result or takeaway rather than trailing ' +
+        'off. Sound confident but not rehearsed, conversational rather than scripted, like ' +
+        'explaining to a smart colleague. Favor specifics - a real detail, a number, a project ' +
+        'name - over vague claims. For behavioral questions, shape the answer as situation, ' +
+        'action the user personally took, and result or lesson, with the action the longest ' +
+        'part since that is what is being evaluated.'
     )
   }
 
