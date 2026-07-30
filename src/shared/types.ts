@@ -72,10 +72,29 @@ export interface UserContext {
   text: string
   savedAt?: number
 }
+
+/** A single named, saved snapshot within a `ProfileSet` (e.g. one company's cover letter). */
+export interface SavedProfile {
+  id: string
+  name: string
+  text: string
+  savedAt: number
+}
+
+/** A field that can hold several named saved versions, with one marked active/in-use. */
+export interface ProfileSet {
+  profiles: SavedProfile[]
+  activeId: string | null
+}
+
 export interface InterviewContext {
   jobDescription: string
   resume: string
   projects: string
+  /** General interview prep notes. Supports multiple named saved versions. */
+  notes: ProfileSet
+  /** Cover letter text. Supports multiple named saved versions. */
+  coverLetter: ProfileSet
   savedAt?: number
 }
 export interface SpeechContext {

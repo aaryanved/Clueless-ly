@@ -12,6 +12,7 @@ import type {
   PermissionKind,
   PermissionStatus,
   PlatformDescription,
+  ProfileSet,
   ScreenSnapshot,
   Session,
   SessionSummary
@@ -56,7 +57,21 @@ const api = {
       ipcRenderer.invoke(IpcChannels.ContextSetSpeech, text, saved),
     clearSpeech: (): Promise<void> => ipcRenderer.invoke(IpcChannels.ContextClearSpeech),
     parseFile: (name: string, bytes: ArrayBuffer): Promise<string> =>
-      ipcRenderer.invoke(IpcChannels.ContextParseFile, name, bytes)
+      ipcRenderer.invoke(IpcChannels.ContextParseFile, name, bytes),
+    saveInterviewProfile: (
+      field: 'notes' | 'coverLetter',
+      name: string,
+      text: string
+    ): Promise<ProfileSet> => ipcRenderer.invoke(IpcChannels.ContextSaveInterviewProfile, field, name, text),
+    updateInterviewProfile: (
+      field: 'notes' | 'coverLetter',
+      id: string,
+      text: string
+    ): Promise<ProfileSet> => ipcRenderer.invoke(IpcChannels.ContextUpdateInterviewProfile, field, id, text),
+    switchInterviewProfile: (field: 'notes' | 'coverLetter', id: string): Promise<ProfileSet> =>
+      ipcRenderer.invoke(IpcChannels.ContextSwitchInterviewProfile, field, id),
+    deleteInterviewProfile: (field: 'notes' | 'coverLetter', id: string): Promise<ProfileSet> =>
+      ipcRenderer.invoke(IpcChannels.ContextDeleteInterviewProfile, field, id)
   },
 
   sessions: {

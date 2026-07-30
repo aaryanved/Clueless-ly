@@ -812,7 +812,9 @@ textarea {
 .context-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  row-gap: 8px;
 }
 .context-actions .btn {
   padding: 6px 14px;
@@ -1350,4 +1352,37 @@ textarea {
   padding: 5px 12px;
   font-size: 12px;
   align-self: flex-start;
+}
+
+/* ---- Saved-version switcher (interview notes / cover letter) ---- */
+.ctx-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctx-profile-select {
+  flex: 1;
+  background: var(--panel);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  color: var(--fg);
+  outline: none;
+}
+.ctx-profile-select:focus {
+  border-color: var(--accent);
+}
+.ctx-name-input {
+  background: var(--panel);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  outline: none;
+  flex: 1 1 110px;
+  min-width: 90px;
+}
+.ctx-name-input:focus {
+  border-color: var(--accent);
 }

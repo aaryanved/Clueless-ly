@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
-import type { InterviewContext } from '@shared/types'
+import type { InterviewContext, ProfileSet } from '@shared/types'
+import { ProfileContextField } from './ProfileContextField'
 
 const DOC_ACCEPT = '.pdf,.docx,.txt,.md'
 const PROJ_ACCEPT = '.zip,.pdf,.txt,.md,.js,.ts,.py,.java,.json'
+
+const emptyProfileSet = (): ProfileSet => ({ profiles: [], activeId: null })
 
 function stamp(ts: number): string {
   const d = new Date(ts)
@@ -14,9 +17,20 @@ function stamp(ts: number): string {
  * resume submitted for the role, and the projects (zip files or links) that back up the
  * technical answers.
  */
+function emptyInterview(): InterviewContext {
+  return {
+    jobDescription: '',
+    resume: '',
+    projects: '',
+    notes: emptyProfileSet(),
+    coverLetter: emptyProfileSet()
+  }
+}
+
 export function InterviewContextPanel(): JSX.Element {
-  const [iv, setIv] = useState<InterviewContext>({ jobDescription: '', resume: '', projects: '' })
+  const [iv, setIv] = useState<InterviewContext>(emptyInterview())
   const [note, setNote] = useState<string | null>(null)
+  const jobRef = useRef<HTMLInputElement>(null)
   const resumeRef = useRef<HTMLInputElement>(null)
   const projRef = useRef<HTMLInputElement>(null)
 
@@ -30,7 +44,10 @@ export function InterviewContextPanel(): JSX.Element {
     void window.clueless.context.setInterview(patch, false)
   }
 
-  async function loadInto(field: 'resume' | 'projects', e: ChangeEvent<HTMLInputElement>): Promise<void> {
+  async function loadInto(
+    field: 'jobDescription' | 'resume' | 'projects',
+    e: ChangeEvent<HTMLInputElement>
+  ): Promise<void> {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
@@ -57,7 +74,7 @@ export function InterviewContextPanel(): JSX.Element {
   }
   async function clearAll(): Promise<void> {
     await window.clueless.context.clearInterview().catch(() => {})
-    setIv({ jobDescription: '', resume: '', projects: '' })
+    setIv(emptyInterview())
   }
 
   return (
@@ -65,8 +82,9 @@ export function InterviewContextPanel(): JSX.Element {
       <section className="group">
         <p className="muted small">
           Give the interview everything it needs to answer accurately: the role's job
-          description, your submitted resume, and the projects (as .zip or links) referenced
-          in it. Used only while Interview mode is on.
+          description, your submitted resume, the projects (as .zip or links) referenced in
+          it, your general prep notes, and your cover letter. Used only while Interview mode
+          is on.
         </p>
 
         <label className="ctx-field">
@@ -77,6 +95,9 @@ export function InterviewContextPanel(): JSX.Element {
             value={iv.jobDescription}
             onChange={(e) => update({ jobDescription: e.target.value })}
           />
+          <button className="btn btn--ghost btn--sm" onClick={() => jobRef.current?.click()}>
+            Load file
+          </button>
         </label>
 
         <label className="ctx-field">
@@ -105,6 +126,24 @@ export function InterviewContextPanel(): JSX.Element {
           </button>
         </label>
 
+        <ProfileContextField
+          field="notes"
+          label="Interview notes"
+          description="General prep notes for this interview: talking points, questions to ask, things to remember. Save multiple versions and switch between them per interview."
+          placeholder="Paste or write general notes for this interview…"
+          fileAccept={DOC_ACCEPT}
+          initial={iv.notes}
+        />
+
+        <ProfileContextField
+          field="coverLetter"
+          label="Cover letter"
+          description="The cover letter you submitted for this role. Save multiple versions and switch between them per interview."
+          placeholder="Paste your cover letter, or load the file…"
+          fileAccept={DOC_ACCEPT}
+          initial={iv.coverLetter}
+        />
+
         <div className="context-actions">
           <button className="btn btn--ghost" onClick={() => void clearAll()}>
             Clear
@@ -116,6 +155,7 @@ export function InterviewContextPanel(): JSX.Element {
         </div>
         {note && <p className="muted small">{note}</p>}
 
+        <input ref={jobRef} type="file" accept={DOC_ACCEPT} style={{ display: 'none' }} onChange={(e) => void loadInto('jobDescription', e)} />
         <input ref={resumeRef} type="file" accept={DOC_ACCEPT} style={{ display: 'none' }} onChange={(e) => void loadInto('resume', e)} />
         <input ref={projRef} type="file" accept={PROJ_ACCEPT} style={{ display: 'none' }} onChange={(e) => void loadInto('projects', e)} />
       </section>
