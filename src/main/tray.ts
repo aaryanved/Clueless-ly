@@ -11,9 +11,6 @@ let tray: Tray | null = null
  */
 export function createTray(overlay: BrowserWindow): Tray {
   tray = new Tray(nativeImage.createEmpty())
-  // macOS renders a text title in the menu bar; Windows relies on the icon/tooltip.
-  // The "¿?" wordmark doubles as the app's little logo.
-  tray.setTitle('¿?')
   tray.setToolTip('Clueless-ly')
 
   const rebuild = (): void => {
