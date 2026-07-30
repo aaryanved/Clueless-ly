@@ -26,6 +26,10 @@ export const IpcChannels = {
   ContextSetSpeech: 'context:set-speech',
   ContextClearSpeech: 'context:clear-speech',
   ContextParseFile: 'context:parse-file',
+  ContextSaveInterviewProfile: 'context:save-interview-profile',
+  ContextUpdateInterviewProfile: 'context:update-interview-profile',
+  ContextSwitchInterviewProfile: 'context:switch-interview-profile',
+  ContextDeleteInterviewProfile: 'context:delete-interview-profile',
 
   SessionsList: 'sessions:list',
   SessionCreate: 'sessions:create',

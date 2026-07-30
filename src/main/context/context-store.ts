@@ -1,6 +1,7 @@
+import { randomUUID } from 'node:crypto'
 import { ipcMain } from 'electron'
 import { IpcChannels } from '@shared/ipc'
-import type { ContextData, InterviewContext } from '@shared/types'
+import type { ContextData, InterviewContext, ProfileSet } from '@shared/types'
 import { createLogger } from '../logging'
 import { store } from '../storage/json-store'
 import { settingsService } from '../settings/settings-service'
@@ -9,11 +10,25 @@ import { parseFileToText } from './file-parse'
 const log = createLogger('context-store')
 const KEY = 'contexts'
 
+type ProfileField = 'notes' | 'coverLetter'
+
+const emptyProfileSet = (): ProfileSet => ({ profiles: [], activeId: null })
+
 const empty = (): ContextData => ({
   user: { text: '' },
-  interview: { jobDescription: '', resume: '', projects: '' },
+  interview: {
+    jobDescription: '',
+    resume: '',
+    projects: '',
+    notes: emptyProfileSet(),
+    coverLetter: emptyProfileSet()
+  },
   speech: { text: '' }
 })
+
+function activeProfileText(set: ProfileSet): string {
+  return set.profiles.find((p) => p.id === set.activeId)?.text ?? ''
+}
 
 let data: ContextData = empty()
 let loaded = false
@@ -21,7 +36,9 @@ let loaded = false
 async function load(): Promise<void> {
   if (loaded) return
   const saved = await store.readJson<ContextData>(KEY)
-  if (saved) data = { ...empty(), ...saved }
+  // Shallow-spread on its own would let an older on-disk `interview` object (saved before
+  // notes/coverLetter existed) fully replace the defaults, leaving those fields undefined.
+  if (saved) data = { ...empty(), ...saved, interview: { ...empty().interview, ...saved.interview } }
   loaded = true
 }
 
@@ -51,6 +68,10 @@ export function buildReference(): string {
     if (iv.jobDescription.trim()) bits.push(`Job description:\n${iv.jobDescription.trim()}`)
     if (iv.resume.trim()) bits.push(`Candidate resume:\n${iv.resume.trim()}`)
     if (iv.projects.trim()) bits.push(`Projects / links:\n${iv.projects.trim()}`)
+    const notes = activeProfileText(iv.notes).trim()
+    if (notes) bits.push(`Interview notes:\n${notes}`)
+    const coverLetter = activeProfileText(iv.coverLetter).trim()
+    if (coverLetter) bits.push(`Cover letter:\n${coverLetter}`)
     if (bits.length) parts.push(`Interview material:\n${bits.join('\n\n')}`)
   }
   if (modes.speech && data.speech.text.trim()) {
@@ -89,9 +110,64 @@ export function registerContextStoreIpc(): void {
   )
   ipcMain.handle(IpcChannels.ContextClearInterview, async () => {
     await load()
-    data.interview = { jobDescription: '', resume: '', projects: '' }
+    data.interview = {
+      jobDescription: '',
+      resume: '',
+      projects: '',
+      notes: emptyProfileSet(),
+      coverLetter: emptyProfileSet()
+    }
     await persist()
   })
+
+  ipcMain.handle(
+    IpcChannels.ContextSaveInterviewProfile,
+    async (_e, field: ProfileField, name: string, text: string) => {
+      await load()
+      const set = data.interview[field]
+      const profile = { id: randomUUID(), name: name.trim() || 'Untitled', text, savedAt: Date.now() }
+      data.interview[field] = { profiles: [...set.profiles, profile], activeId: profile.id }
+      await persist()
+      return data.interview[field]
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannels.ContextUpdateInterviewProfile,
+    async (_e, field: ProfileField, id: string, text: string) => {
+      await load()
+      const set = data.interview[field]
+      data.interview[field] = {
+        ...set,
+        profiles: set.profiles.map((p) => (p.id === id ? { ...p, text, savedAt: Date.now() } : p))
+      }
+      await persist()
+      return data.interview[field]
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannels.ContextSwitchInterviewProfile,
+    async (_e, field: ProfileField, id: string) => {
+      await load()
+      data.interview[field] = { ...data.interview[field], activeId: id }
+      await persist()
+      return data.interview[field]
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannels.ContextDeleteInterviewProfile,
+    async (_e, field: ProfileField, id: string) => {
+      await load()
+      const set = data.interview[field]
+      const profiles = set.profiles.filter((p) => p.id !== id)
+      const activeId = set.activeId === id ? (profiles[profiles.length - 1]?.id ?? null) : set.activeId
+      data.interview[field] = { profiles, activeId }
+      await persist()
+      return data.interview[field]
+    }
+  )
 
   ipcMain.handle(IpcChannels.ContextSetSpeech, async (_e, text: string, saved: boolean) => {
     await load()
