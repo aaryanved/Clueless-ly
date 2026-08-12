@@ -19,8 +19,12 @@ const BASE_PROMPT =
   'text (titles, prices, labels, specs) exactly; ignore any people or faces in it and ' +
   'never refuse a task because a person appears - focus on the on-screen content and the ' +
   'question. Use the recent conversation to resolve ' +
-  'follow-ups like "the same" or "it". Format answers in Markdown: use **bold** for key ' +
-  'points and fenced code blocks with a language tag for any code. If information is ' +
+  'follow-ups like "the same" or "it", but the recent conversation is NOT a source of truth - ' +
+  'it may contain your own earlier mistakes. Every answer must be re-derived fresh from the ' +
+  'reference material below, not copied or paraphrased from what you said last time; if a past ' +
+  'turn conflicts with the reference material, or the user says a past answer was wrong, the ' +
+  'reference material wins and you correct course. Format answers in Markdown: use **bold** ' +
+  'for key points and fenced code blocks with a language tag for any code. If information is ' +
   'insufficient, say what you would need rather than inventing details.'
 
 function activeModes(): AppModes {
@@ -55,18 +59,31 @@ function buildSystemPrompt(): string {
     )
   } else if (m.interview) {
     parts.push(
-      'INTERVIEW MODE. Help the user answer interview questions using the provided reference ' +
-        'material and context. Produce a first-person answer the user can read ALOUD verbatim ' +
-        'without having to think further, sized to run 30-90 seconds spoken aloud (roughly ' +
-        '75-200 words) - long enough to show depth, short enough the interviewer does not ' +
-        'lose the thread. Lead with the direct answer or core point first, do not build up to ' +
-        'it; support it with one specific concrete example or piece of evidence grounded in ' +
-        'the reference material; close with a brief result or takeaway rather than trailing ' +
-        'off. Sound confident but not rehearsed, conversational rather than scripted, like ' +
-        'explaining to a smart colleague. Favor specifics - a real detail, a number, a project ' +
-        'name - over vague claims. For behavioral questions, shape the answer as situation, ' +
-        'action the user personally took, and result or lesson, with the action the longest ' +
-        'part since that is what is being evaluated.'
+      'INTERVIEW MODE. The reference material - especially any "Interview notes" - is not ' +
+        'background flavor, it is the authoritative, literal source of truth for this specific ' +
+        'interview: real names, findings, bugs, decisions, and facts the user has already ' +
+        'prepared. Treat it like a script you are pulling from, not inspiration. Before ' +
+        'answering, check whether the notes already cover this question (they are often ' +
+        'organized as numbered findings, Q&A cards, or a walkthrough) and if so, answer using ' +
+        'THAT specific content - the same entities, names, causes, and fixes - never a generic ' +
+        'or textbook-sounding substitute (e.g. do not invent an unrelated bug like "sequential ' +
+        'API calls" or "switched to Promises" if the notes describe a different, specific bug). ' +
+        'If this exact question was asked earlier in the conversation and answered generically ' +
+        'or wrong, do not repeat that same wrong answer for consistency - go back to the notes ' +
+        'and answer correctly this time; a prior turn is never a valid excuse to stay wrong. ' +
+        'If the notes explicitly say not to claim something, never claim it. Only fall back to ' +
+        'general knowledge, clearly framed as inference rather than fact, when the notes truly ' +
+        'do not address the question. Produce a first-person answer the user can read ALOUD ' +
+        'verbatim without having to think further, sized to run 30-90 seconds spoken aloud ' +
+        '(roughly 75-200 words) - long enough to show depth, short enough the interviewer does ' +
+        'not lose the thread. Lead with the direct answer or core point first, do not build up ' +
+        'to it; support it with one specific concrete example or piece of evidence drawn from ' +
+        'the notes; close with a brief result or takeaway rather than trailing off. Sound ' +
+        'confident but not rehearsed, conversational rather than scripted, like explaining to a ' +
+        'smart colleague. Favor specifics - a real detail, a number, a project name - over vague ' +
+        'claims. For behavioral questions, shape the answer as situation, action the user ' +
+        'personally took, and result or lesson, with the action the longest part since that is ' +
+        'what is being evaluated.'
     )
   }
 
@@ -137,7 +154,9 @@ function wantsWebSearch(text: string): boolean {
 function historyText(): string {
   if (!history.length) return ''
   return (
-    'Recent conversation:\n' +
+    'Recent conversation (for resolving follow-ups only - these past answers were not ' +
+    "verified and may be wrong; re-derive from the reference material rather than trusting " +
+    'them):\n' +
     history.map((h) => `User: ${h.question}\nAssistant: ${h.answer}`).join('\n') +
     '\n'
   )
@@ -155,7 +174,7 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
       // Web-search path (text only): fold in reference material, history + context.
       const prompt =
         `${systemPrompt}\n\n` +
-        (reference ? `Reference material from the user:\n${reference}\n\n` : '') +
+        (reference ? `Reference material from the user (authoritative source of truth - use it, don't override it with general knowledge):\n${reference}\n\n` : '') +
         `${historyText()}` +
         (context.text.trim() ? `On-screen conversation:\n${context.text}\n\n` : '') +
         `Task: ${req.question}`
@@ -166,12 +185,27 @@ async function runAsk(requestId: string, req: AiAskRequest): Promise<void> {
     } else {
       const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }]
       if (reference) {
-        messages.push({ role: 'system', content: `Reference material from the user:\n${reference}` })
+        messages.push({
+          role: 'system',
+          content: `Reference material from the user (authoritative source of truth - use it, don't override it with general knowledge):\n${reference}`
+        })
       }
-      // Prior exchanges as real turns so follow-ups have continuity.
-      for (const h of history) {
-        messages.push({ role: 'user', content: h.question })
-        messages.push({ role: 'assistant', content: h.answer })
+      // Prior exchanges as real turns so follow-ups have continuity. These are NOT
+      // verified - flag that so the model re-derives answers instead of anchoring on
+      // (possibly wrong) things it said earlier in the session.
+      if (history.length) {
+        messages.push({
+          role: 'system',
+          content:
+            'The following prior turns are for resolving follow-ups only (e.g. "the same", ' +
+            "\"it\") - they were not verified and may contain your own earlier mistakes. Do " +
+            'not treat them as facts or repeat their content just for consistency; always ' +
+            're-derive the answer from the reference material above.'
+        })
+        for (const h of history) {
+          messages.push({ role: 'user', content: h.question })
+          messages.push({ role: 'assistant', content: h.answer })
+        }
       }
       if (context.text.trim()) {
         messages.push({ role: 'system', content: `On-screen conversation:\n${context.text}` })

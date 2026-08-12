@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type ChangeEvent } from 'react'
 import type { ProfileSet } from '@shared/types'
 
 function stamp(ts: number): string {
@@ -15,19 +15,24 @@ interface Props {
   initial: ProfileSet
 }
 
+/** Lets the parent panel's single Save button also flush an unsaved draft here. */
+export interface ProfileContextFieldHandle {
+  saveIfDirty: () => Promise<void>
+}
+
 /**
  * A context field that, unlike the single-value fields elsewhere in this panel, keeps
  * several named saved versions (e.g. one per company) and lets you switch which one is
  * active. Used for interview notes and cover letters.
  */
-export function ProfileContextField({
+export const ProfileContextField = forwardRef<ProfileContextFieldHandle, Props>(function ProfileContextField({
   field,
   label,
   description,
   placeholder,
   fileAccept,
   initial
-}: Props): JSX.Element {
+}: Props, ref): JSX.Element {
   const [set, setSet] = useState<ProfileSet>(initial)
   const [draft, setDraft] = useState(initial.profiles.find((p) => p.id === initial.activeId)?.text ?? '')
   const [name, setName] = useState('')
@@ -75,6 +80,28 @@ export function ProfileContextField({
     setName('')
     flash('Saved as a new version.')
   }
+
+  // Exposed so the panel's single top-level Save button also flushes whatever is
+  // sitting in this field's draft - otherwise a user who only clicks that button
+  // silently loses anything typed here, since it never had its own save step.
+  useImperativeHandle(ref, () => ({
+    async saveIfDirty() {
+      if (!draft.trim()) return
+      if (active) {
+        if (draft === active.text) return
+        const next = await window.clueless.context.updateInterviewProfile(field, active.id, draft)
+        setSet(next)
+      } else {
+        const next = await window.clueless.context.saveInterviewProfile(
+          field,
+          name.trim() || 'Untitled',
+          draft
+        )
+        setSet(next)
+        setName('')
+      }
+    }
+  }))
 
   async function switchTo(id: string): Promise<void> {
     const next = await window.clueless.context.switchInterviewProfile(field, id)
@@ -178,4 +205,4 @@ export function ProfileContextField({
       />
     </label>
   )
-}
+})

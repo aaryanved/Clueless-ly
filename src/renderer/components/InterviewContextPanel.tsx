@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import type { InterviewContext, ProfileSet } from '@shared/types'
-import { ProfileContextField } from './ProfileContextField'
+import { ProfileContextField, type ProfileContextFieldHandle } from './ProfileContextField'
 
 const DOC_ACCEPT = '.pdf,.docx,.txt,.md'
 const PROJ_ACCEPT = '.zip,.pdf,.txt,.md,.js,.ts,.py,.java,.json'
@@ -33,6 +33,8 @@ export function InterviewContextPanel(): JSX.Element {
   const jobRef = useRef<HTMLInputElement>(null)
   const resumeRef = useRef<HTMLInputElement>(null)
   const projRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<ProfileContextFieldHandle>(null)
+  const coverLetterRef = useRef<ProfileContextFieldHandle>(null)
 
   useEffect(() => {
     window.clueless.context.getAll().then((d) => setIv(d.interview)).catch(() => {})
@@ -67,7 +69,20 @@ export function InterviewContextPanel(): JSX.Element {
   }
 
   async function submit(): Promise<void> {
-    await window.clueless.context.setInterview(iv, true).catch(() => {})
+    // Only patch the plain-text fields this panel owns directly. notes/coverLetter are
+    // ProfileSets owned by the child ProfileContextField and saved via their own IPC
+    // calls below - sending the parent's (possibly stale) copy of them here would spread
+    // over and clobber whatever those calls just wrote.
+    await Promise.all([
+      window.clueless.context
+        .setInterview(
+          { jobDescription: iv.jobDescription, resume: iv.resume, projects: iv.projects },
+          true
+        )
+        .catch(() => {}),
+      notesRef.current?.saveIfDirty(),
+      coverLetterRef.current?.saveIfDirty()
+    ])
     setIv((s) => ({ ...s, savedAt: Date.now() }))
     setNote('Saved interview context.')
     setTimeout(() => setNote(null), 2000)
@@ -127,6 +142,7 @@ export function InterviewContextPanel(): JSX.Element {
         </label>
 
         <ProfileContextField
+          ref={notesRef}
           field="notes"
           label="Interview notes"
           description="General prep notes for this interview: talking points, questions to ask, things to remember. Save multiple versions and switch between them per interview."
@@ -136,6 +152,7 @@ export function InterviewContextPanel(): JSX.Element {
         />
 
         <ProfileContextField
+          ref={coverLetterRef}
           field="coverLetter"
           label="Cover letter"
           description="The cover letter you submitted for this role. Save multiple versions and switch between them per interview."
